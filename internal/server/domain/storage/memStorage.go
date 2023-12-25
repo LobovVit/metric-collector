@@ -1,22 +1,14 @@
-package domain
+package storage
 
 import "fmt"
-
-type DataInterface interface {
-	SetGauge(key string, val float64) error
-	SetCounter(key string, val int64) error
-}
 
 type MemStorage struct {
 	gauge   map[string]float64
 	counter map[string]int64
 }
 
-var Storage *MemStorage
-
 func GetStorage() *MemStorage {
-	Storage = &MemStorage{make(map[string]float64), make(map[string]int64)}
-	return Storage
+	return &MemStorage{make(map[string]float64), make(map[string]int64)} //Storage
 }
 
 func (ms *MemStorage) SetGauge(key string, val float64) error {
@@ -36,4 +28,5 @@ func (ms *MemStorage) GetAll() {
 	for k, v := range ms.gauge {
 		fmt.Printf("gauge: %v=%v\n", k, v)
 	}
+	//fmt.Printf("PollCount: %v\n", ms.counter["PollCount"])
 }
