@@ -18,11 +18,11 @@ func sendRequest(metrics *metrics.Metrics, endPoint string) {
 		}
 		req.Header.Set("Content-Type", "text/plain")
 		resp, err := client.Do(req)
-		defer resp.Body.Close()
 		if err != nil {
 			fmt.Printf("client: error making http request: %s\n", err)
 			os.Exit(1)
 		}
+		defer resp.Body.Close()
 		//fmt.Println(resp.Status)
 	}
 	for k, v := range metrics.Counter {
@@ -35,11 +35,11 @@ func sendRequest(metrics *metrics.Metrics, endPoint string) {
 		}
 		req.Header.Set("Content-Type", "text/plain")
 		resp, err := client.Do(req)
-		defer resp.Body.Close()
 		if err != nil {
 			fmt.Printf("client: error making http request: %s\n", err)
 			os.Exit(1)
 		}
+		defer resp.Body.Close()
 		//fmt.Println(resp.Status)
 		//fmt.Println(req.URL)
 	}
