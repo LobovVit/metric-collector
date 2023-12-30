@@ -14,7 +14,7 @@ func AllMetricsHandler(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusNotFound)
 	} else {
 		w.WriteHeader(http.StatusOK)
-		w.Write(createHtml(mapToMetric(res)))
+		w.Write(createHTML(mapToMetric(res)))
 	}
 }
 
@@ -40,7 +40,7 @@ func mapToMetric(m map[string]map[string]string) []Metric {
 	return ret
 }
 
-func createHtml(data []Metric) []byte {
+func createHTML(data []Metric) []byte {
 	const tpl = `
 <!DOCTYPE html>
 <html>
