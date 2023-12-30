@@ -1,34 +1,27 @@
 package actions
 
 import (
-	"github.com/LobovVit/metric-collector/internal/server/domain/storage"
-	"net/http"
+	"errors"
 	"strconv"
-	"strings"
 )
 
-var store = StorInterface(storage.GetStorage())
+func CheckAndSave(tp string, name string, value string) error {
 
-func CheckAndSave(url string) int {
-	part := strings.Split(url, `/`)
-	if len(part) != 5 && len(part) != 6 {
-		return http.StatusNotFound
-	}
-	switch part[2] {
+	switch tp {
 	case "gauge":
-		v, err := strconv.ParseFloat(part[4], 64)
+		v, err := strconv.ParseFloat(value, 64)
 		if err != nil {
-			return http.StatusBadRequest
+			return errors.New("Bad Request")
 		}
-		store.SetGauge(part[3], v)
+		store.SetGauge(name, v)
 	case "counter":
-		v, err := strconv.ParseInt(part[4], 10, 64)
+		v, err := strconv.ParseInt(value, 10, 64)
 		if err != nil {
-			return http.StatusBadRequest
+			return errors.New("Bad Request")
 		}
-		store.SetCounter(part[3], v)
+		store.SetCounter(name, v)
 	default:
-		return http.StatusBadRequest
+		return errors.New("Bad Request")
 	}
-	return http.StatusOK
+	return nil
 }

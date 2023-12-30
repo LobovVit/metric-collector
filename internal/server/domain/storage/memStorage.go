@@ -1,6 +1,9 @@
 package storage
 
-import "fmt"
+import (
+	"errors"
+	"fmt"
+)
 
 type MemStorage struct {
 	gauge   map[string]float64
@@ -21,12 +24,39 @@ func (ms *MemStorage) SetCounter(key string, val int64) error {
 	return nil
 }
 
-func (ms *MemStorage) GetAll() {
+func (ms *MemStorage) GetAll() map[string]map[string]string {
+	retCounter := make(map[string]string)
 	for k, v := range ms.counter {
-		fmt.Printf("counter: %v=%v\n", k, v)
+		retCounter[k] = fmt.Sprintf("%d", v)
 	}
+	retGauge := make(map[string]string)
 	for k, v := range ms.gauge {
-		fmt.Printf("gauge: %v=%v\n", k, v)
+		retGauge[k] = fmt.Sprintf("%f", v)
 	}
-	//fmt.Printf("PollCount: %v\n", ms.counter["PollCount"])
+	ret := make(map[string]map[string]string)
+	ret["counter"] = retCounter
+	ret["gauge"] = retGauge
+	return ret
+}
+
+func (ms *MemStorage) GetSingle(tp string, name string) (string, error) {
+	switch tp {
+	case "gauge":
+		res, ok := ms.gauge[name]
+		if ok {
+			return fmt.Sprintf("%f", res), nil
+		} else {
+			return "", errors.New("NotFound")
+		}
+
+	case "counter":
+		res, ok := ms.counter[name]
+		if ok {
+			return fmt.Sprintf("%d", res), nil
+		} else {
+			return "", errors.New("NotFound")
+		}
+	default:
+		return "", errors.New("NotFound")
+	}
 }

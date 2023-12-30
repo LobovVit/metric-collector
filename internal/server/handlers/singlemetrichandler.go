@@ -7,15 +7,15 @@ import (
 	"strings"
 )
 
-func UpdateHandler(w http.ResponseWriter, r *http.Request) {
+func SingleMetricHandler(w http.ResponseWriter, r *http.Request) {
 	tp := strings.ToLower(chi.URLParam(r, "type"))
 	name := strings.ToLower(chi.URLParam(r, "name"))
-	value := strings.ToLower(chi.URLParam(r, "value"))
 	w.Header().Set("Content-Type", "text/plain")
-	err := actions.CheckAndSave(tp, name, value)
+	res, err := actions.GetSingleVal(tp, name)
 	if err != nil {
-		w.WriteHeader(http.StatusBadRequest)
+		w.WriteHeader(http.StatusNotFound)
 	} else {
 		w.WriteHeader(http.StatusOK)
+		w.Write([]byte(res))
 	}
 }
