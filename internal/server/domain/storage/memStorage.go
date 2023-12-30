@@ -44,7 +44,7 @@ func (ms *MemStorage) GetSingle(tp string, name string) (string, error) {
 	case "gauge":
 		res, ok := ms.gauge[name]
 		if ok {
-			return fmt.Sprintf("%f", res), nil
+			return fmt.Sprintf("%g", res), nil
 		} else {
 			return "", errors.New("NotFound")
 		}

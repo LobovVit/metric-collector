@@ -66,6 +66,7 @@ func TestUpdateHandler(t *testing.T) {
 			resp, _ := testRequest(t, ts, tt.metod, tt.path)
 			assert.Equal(t, tt.want.statusCode, resp.StatusCode)
 			assert.Equal(t, tt.want.contentType, resp.Header.Get("Content-Type"))
+			resp.Body.Close()
 		})
 	}
 }
