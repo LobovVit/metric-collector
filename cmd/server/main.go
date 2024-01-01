@@ -1,6 +1,7 @@
 package main
 
 import (
+	"github.com/LobovVit/metric-collector/internal/server/config"
 	"github.com/LobovVit/metric-collector/internal/server/handlers"
 	"github.com/go-chi/chi/v5"
 	"net/http"
@@ -13,6 +14,7 @@ func main() {
 }
 
 func run() error {
+	cfg := config.GetConfig()
 	//mux := http.NewServeMux()
 	mux := chi.NewRouter()
 	//mux.HandleFunc(`/update/`, handlers.UpdateHandler)
@@ -20,5 +22,5 @@ func run() error {
 	mux.Get("/value/{type}/{name}", handlers.SingleMetricHandler)
 	mux.Post("/update/{type}/{name}/{value}", handlers.UpdateHandler)
 
-	return http.ListenAndServe(`:8080`, mux)
+	return http.ListenAndServe(cfg.Host, mux)
 }
