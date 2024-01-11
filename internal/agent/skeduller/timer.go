@@ -39,5 +39,4 @@ func StartTimer(ctx context.Context, readTime int64, sendTime int64, endPoint st
 		}
 	}
 	wg.Wait()
-
 }
