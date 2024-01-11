@@ -7,7 +7,7 @@ import (
 	"strings"
 )
 
-func UpdateHandler(w http.ResponseWriter, r *http.Request) {
+func updateHandler(w http.ResponseWriter, r *http.Request) {
 	tp := strings.ToLower(chi.URLParam(r, "type"))
 	name := strings.ToLower(chi.URLParam(r, "name"))
 	value := strings.ToLower(chi.URLParam(r, "value"))

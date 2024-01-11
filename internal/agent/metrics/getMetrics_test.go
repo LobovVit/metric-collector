@@ -5,22 +5,6 @@ import (
 	"testing"
 )
 
-//func TestGetMetricStruct(t *testing.T) {
-//	tests := []struct {
-//		name string
-//		want *Metrics
-//	}{
-//		// TODO: Add test cases.
-//	}
-//	for _, tt := range tests {
-//		t.Run(tt.name, func(t *testing.T) {
-//			if got := GetMetricStruct(); !reflect.DeepEqual(got, tt.want) {
-//				t.Errorf("GetMetricStruct() = %v, want %v", got, tt.want)
-//			}
-//		})
-//	}
-//}
-
 func TestMetrics_GetMetrics(t *testing.T) {
 	type fields struct {
 		Gauge               map[string]float64

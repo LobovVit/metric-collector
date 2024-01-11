@@ -25,16 +25,6 @@ func testRequest(t *testing.T, ts *httptest.Server, method,
 	return resp, string(respBody)
 }
 
-func TestRouter(t *testing.T) {
-	//ts := httptest.NewServer(CarRouter())
-	mux := chi.NewRouter()
-	mux.Post("/update/{type}/{name}/{value}", UpdateHandler)
-	ts := httptest.NewServer(mux)
-	defer ts.Close()
-	// ниже добавим тестовые запросы
-	// ...
-}
-
 func TestUpdateHandler(t *testing.T) {
 	type want struct {
 		contentType string
@@ -57,7 +47,7 @@ func TestUpdateHandler(t *testing.T) {
 		},
 	}
 	mux := chi.NewRouter()
-	mux.Post("/update/{type}/{name}/{value}", UpdateHandler)
+	mux.Post("/update/{type}/{name}/{value}", updateHandler)
 	ts := httptest.NewServer(mux)
 
 	for _, tt := range tests {

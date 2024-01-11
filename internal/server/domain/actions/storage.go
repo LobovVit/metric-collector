@@ -2,9 +2,17 @@ package actions
 
 import "github.com/LobovVit/metric-collector/internal/server/domain/storage"
 
-var store = StorInterface(storage.GetStorage())
+type repo struct {
+	storage repository
+}
 
-type StorInterface interface {
+func getRepo() repository {
+	return storage.NewStorage()
+}
+
+var store = repo{getRepo()}
+
+type repository interface {
 	SetGauge(key string, val float64) error
 	SetCounter(key string, val int64) error
 	GetAll() map[string]map[string]string

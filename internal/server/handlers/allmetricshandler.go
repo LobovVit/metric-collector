@@ -7,14 +7,20 @@ import (
 	"strings"
 )
 
-func AllMetricsHandler(w http.ResponseWriter, r *http.Request) {
+func allMetricsHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "text/html")
 	res, err := actions.GetAll()
+	data, errData := createHTML(mapToMetric(res))
 	if err != nil {
 		w.WriteHeader(http.StatusNotFound)
 	} else {
-		w.WriteHeader(http.StatusOK)
-		w.Write(createHTML(mapToMetric(res)))
+		if errData != nil {
+			w.WriteHeader(http.StatusInternalServerError)
+		} else {
+			w.WriteHeader(http.StatusOK)
+			w.Write(data)
+		}
+
 	}
 }
 
@@ -40,7 +46,7 @@ func mapToMetric(m map[string]map[string]string) []Metric {
 	return ret
 }
 
-func createHTML(data []Metric) []byte {
+func createHTML(data []Metric) ([]byte, error) {
 	const tpl = `
 <!DOCTYPE html>
 <html>
@@ -60,12 +66,12 @@ func createHTML(data []Metric) []byte {
 </html>`
 	tmpl, err := template.New("AllMetrics").Parse(tpl)
 	if err != nil {
-		return []byte("Err Parse" + err.Error())
+		return []byte("Err Parse" + err.Error()), err
 	}
 	reader := new(strings.Builder)
 	err = tmpl.Execute(reader, data)
 	if err != nil {
-		return []byte("Err Execute" + err.Error())
+		return []byte("Err Execute" + err.Error()), err
 	}
-	return []byte(reader.String())
+	return []byte(reader.String()), nil
 }
