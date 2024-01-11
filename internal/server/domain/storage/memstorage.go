@@ -13,7 +13,7 @@ type MemStorage struct {
 }
 
 func notFoundErr(tp, name string) error {
-	return fmt.Errorf("Not Found metric type:\"%v\" with name:\"%v\"", tp, name)
+	return fmt.Errorf("not found metric type:\"%v\" with name:\"%v\"", tp, name)
 }
 
 func NewStorage() *MemStorage {
