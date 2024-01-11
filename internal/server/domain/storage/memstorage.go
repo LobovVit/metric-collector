@@ -1,7 +1,6 @@
 package storage
 
 import (
-	"errors"
 	"fmt"
 	"sync"
 )
@@ -14,7 +13,7 @@ type MemStorage struct {
 }
 
 func notFoundErr(tp, name string) error {
-	return errors.New(fmt.Sprintf("Not Found metric type:\"%v\" with name:\"%v\"", tp, name))
+	return fmt.Errorf("Not Found metric type:\"%v\" with name:\"%v\"", tp, name)
 }
 
 func NewStorage() *MemStorage {
