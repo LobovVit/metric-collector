@@ -9,7 +9,6 @@ import (
 
 func StartTimer(ctx context.Context, readTime int64, sendTime int64, endPoint string) {
 	m := metrics.GetMetricStruct()
-	//wg := sync.WaitGroup{}
 
 	readTicker := time.NewTicker(time.Second * time.Duration(readTime))
 	sendTicker := time.NewTicker(time.Second * time.Duration(sendTime))
