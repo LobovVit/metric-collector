@@ -1,9 +1,13 @@
 package actions
 
 import (
-	"errors"
+	"fmt"
 	"strconv"
 )
+
+func badRequestErr(tp, value string) error {
+	return fmt.Errorf("bad request metric type:\"%v\" with value:\"%v\"", tp, value)
+}
 
 func CheckAndSave(tp string, name string, value string) error {
 
@@ -11,17 +15,17 @@ func CheckAndSave(tp string, name string, value string) error {
 	case "gauge":
 		v, err := strconv.ParseFloat(value, 64)
 		if err != nil {
-			return errors.New("bad request")
+			return badRequestErr(tp, value)
 		}
 		store.storage.SetGauge(name, v)
 	case "counter":
 		v, err := strconv.ParseInt(value, 10, 64)
 		if err != nil {
-			return errors.New("bad request")
+			return badRequestErr(tp, value)
 		}
 		store.storage.SetCounter(name, v)
 	default:
-		return errors.New("bad request")
+		return badRequestErr(tp, value)
 	}
 	return nil
 }
