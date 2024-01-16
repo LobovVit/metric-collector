@@ -1,27 +1,25 @@
-package handlers
+package server
 
 import (
-	"github.com/LobovVit/metric-collector/internal/server/domain/actions"
 	"html/template"
 	"net/http"
 	"strings"
 )
 
-func allMetricsHandler(w http.ResponseWriter, r *http.Request) {
+func (a *App) allMetricsHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "text/html")
-	res, err := actions.GetAll()
-	data, errData := createHTML(mapToMetric(res))
+	res, err := a.storage.GetAll()
 	if err != nil {
 		w.WriteHeader(http.StatusNotFound)
-	} else {
-		if errData != nil {
-			w.WriteHeader(http.StatusInternalServerError)
-		} else {
-			w.WriteHeader(http.StatusOK)
-			w.Write(data)
-		}
-
+		return
 	}
+	data, err := createHTML(mapToMetric(res))
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+	w.WriteHeader(http.StatusOK)
+	w.Write(data)
 }
 
 type Metric struct {

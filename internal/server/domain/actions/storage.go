@@ -2,15 +2,13 @@ package actions
 
 import "github.com/LobovVit/metric-collector/internal/server/domain/storage"
 
-type repo struct {
+type Repo struct {
 	storage repository
 }
 
-func getRepo() repository {
-	return storage.NewStorage()
+func GetRepo() Repo {
+	return Repo{storage.NewStorage()}
 }
-
-var store = repo{getRepo()}
 
 type repository interface {
 	SetGauge(key string, val float64) error

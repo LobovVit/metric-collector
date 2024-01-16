@@ -1,17 +1,16 @@
-package handlers
+package server
 
 import (
-	"github.com/LobovVit/metric-collector/internal/server/domain/actions"
 	"github.com/go-chi/chi/v5"
 	"net/http"
 	"strings"
 )
 
-func singleMetricHandler(w http.ResponseWriter, r *http.Request) {
+func (a *App) singleMetricHandler(w http.ResponseWriter, r *http.Request) {
 	tp := strings.ToLower(chi.URLParam(r, "type"))
 	name := strings.ToLower(chi.URLParam(r, "name"))
 	w.Header().Set("Content-Type", "text/plain")
-	res, err := actions.GetSingleVal(tp, name)
+	res, err := a.storage.GetSingleVal(tp, name)
 	if err != nil {
 		w.WriteHeader(http.StatusNotFound)
 		w.Write([]byte(err.Error()))

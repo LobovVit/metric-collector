@@ -3,7 +3,6 @@ package config
 import (
 	"flag"
 	"github.com/caarlos0/env/v6"
-	"log"
 )
 
 type Config struct {
@@ -12,13 +11,11 @@ type Config struct {
 	PollInterval   int64  `env:"POLL_INTERVAL"`
 }
 
-var instance *Config
-
-func GetConfig() *Config {
-	instance = &Config{}
-	err := env.Parse(instance)
+func GetConfig() (*Config, error) {
+	config := &Config{}
+	err := env.Parse(config)
 	if err != nil {
-		log.Fatal(err)
+		return nil, err
 	}
 
 	host := flag.String("a", "localhost:8080", "адрес эндпоинта HTTP-сервера")
@@ -26,14 +23,17 @@ func GetConfig() *Config {
 	pollInterval := flag.Int64("p", 2, "частота опроса метрик из пакета runtime")
 	flag.Parse()
 
-	if instance.Host == "" {
-		instance.Host = *host
+	if config.Host == "" {
+		config.Host = *host
 	}
-	if instance.ReportInterval == 0 {
-		instance.ReportInterval = *reportInterval
+	if config.Host != "" {
+		config.Host = "http://" + config.Host + "/update/"
 	}
-	if instance.PollInterval == 0 {
-		instance.PollInterval = *pollInterval
+	if config.ReportInterval == 0 {
+		config.ReportInterval = *reportInterval
 	}
-	return instance
+	if config.PollInterval == 0 {
+		config.PollInterval = *pollInterval
+	}
+	return config, nil
 }

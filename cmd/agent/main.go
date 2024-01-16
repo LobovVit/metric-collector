@@ -2,8 +2,8 @@ package main
 
 import (
 	"context"
+	"github.com/LobovVit/metric-collector/internal/agent/app"
 	"github.com/LobovVit/metric-collector/internal/agent/config"
-	"github.com/LobovVit/metric-collector/internal/agent/skeduller"
 	"os/signal"
 	"syscall"
 )
@@ -15,10 +15,14 @@ func main() {
 }
 
 func run() error {
-	cfg := config.GetConfig()
+	cfg, err := config.GetConfig()
+	if err != nil {
+		return err
+	}
 	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGHUP, syscall.SIGTERM, syscall.SIGABRT)
 	defer stop()
 
-	skeduller.StartTimer(ctx, cfg.PollInterval, cfg.ReportInterval, "http://"+cfg.Host+"/update/")
+	agent := app.NewAgent(cfg, ctx)
+	agent.RunAgent()
 	return nil
 }

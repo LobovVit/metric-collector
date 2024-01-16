@@ -5,27 +5,31 @@ import (
 	"strconv"
 )
 
-func badRequestErr(tp, value string) error {
-	return fmt.Errorf("bad request metric type:\"%v\" with value:\"%v\"", tp, value)
+type badRequestErr struct {
+	tp    string
+	value string
 }
 
-func CheckAndSave(tp string, name string, value string) error {
+func (e badRequestErr) Error() string {
+	return fmt.Sprintf("bad request metric type:\"%v\" with value:\"%v\"", e.tp, e.value)
+}
 
+func (r Repo) CheckAndSave(tp string, name string, value string) error {
 	switch tp {
 	case "gauge":
 		v, err := strconv.ParseFloat(value, 64)
 		if err != nil {
-			return badRequestErr(tp, value)
+			return badRequestErr{tp, value}
 		}
-		store.storage.SetGauge(name, v)
+		r.storage.SetGauge(name, v)
 	case "counter":
 		v, err := strconv.ParseInt(value, 10, 64)
 		if err != nil {
-			return badRequestErr(tp, value)
+			return badRequestErr{tp, value}
 		}
-		store.storage.SetCounter(name, v)
+		r.storage.SetCounter(name, v)
 	default:
-		return badRequestErr(tp, value)
+		return badRequestErr{tp, value}
 	}
 	return nil
 }

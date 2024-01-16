@@ -2,7 +2,7 @@ package main
 
 import (
 	"github.com/LobovVit/metric-collector/internal/server/config"
-	"github.com/LobovVit/metric-collector/internal/server/handlers"
+	"github.com/LobovVit/metric-collector/internal/server/server"
 )
 
 func main() {
@@ -12,6 +12,10 @@ func main() {
 }
 
 func run() error {
-	cfg := config.GetConfig()
-	return handlers.RouterRun(cfg.Host)
+	cfg, err := config.GetConfig()
+	if err != nil {
+		return err
+	}
+	app := server.GetApp(cfg.Host)
+	return app.RouterRun()
 }

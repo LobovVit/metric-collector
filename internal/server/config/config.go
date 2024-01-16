@@ -3,26 +3,23 @@ package config
 import (
 	"flag"
 	"github.com/caarlos0/env/v6"
-	"log"
 )
 
 type Config struct {
 	Host string `env:"ADDRESS"`
 }
 
-var instance *Config
-
-func GetConfig() *Config {
-	instance = &Config{}
-	err := env.Parse(instance)
+func GetConfig() (*Config, error) {
+	config := &Config{}
+	err := env.Parse(config)
 	if err != nil {
-		log.Fatal(err)
+		return nil, err
 	}
 	host := flag.String("a", "localhost:8080", "адрес эндпоинта HTTP-сервера")
 	flag.Parse()
 
-	if instance.Host == "" {
-		instance.Host = *host
+	if config.Host == "" {
+		config.Host = *host
 	}
-	return instance
+	return config, nil
 }

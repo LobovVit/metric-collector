@@ -5,15 +5,20 @@ import (
 	"sync"
 )
 
+type notFoundMetricError struct {
+	tp   string
+	name string
+}
+
+func (e notFoundMetricError) Error() string {
+	return fmt.Sprintf("not found metric type:\"%v\" with name:\"%v\"", e.tp, e.name)
+}
+
 type MemStorage struct {
 	Gauge          map[string]float64
 	Counter        map[string]int64
 	rwGaugeMutex   sync.RWMutex
 	rwCounterMutex sync.RWMutex
-}
-
-func notFoundErr(tp, name string) error {
-	return fmt.Errorf("not found metric type:\"%v\" with name:\"%v\"", tp, name)
 }
 
 func NewStorage() *MemStorage {
@@ -64,7 +69,7 @@ func (ms *MemStorage) GetSingle(tp string, name string) (string, error) {
 		if ok {
 			return fmt.Sprintf("%g", res), nil
 		} else {
-			return "", notFoundErr(tp, name)
+			return "", notFoundMetricError{tp, name}
 		}
 
 	case "counter":
@@ -75,9 +80,9 @@ func (ms *MemStorage) GetSingle(tp string, name string) (string, error) {
 		if ok {
 			return fmt.Sprintf("%d", res), nil
 		} else {
-			return "", notFoundErr(tp, name)
+			return "", notFoundMetricError{tp, name}
 		}
 	default:
-		return "", notFoundErr(tp, name)
+		return "", notFoundMetricError{tp, name}
 	}
 }

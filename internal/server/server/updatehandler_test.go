@@ -1,4 +1,4 @@
-package handlers
+package server
 
 import (
 	"github.com/go-chi/chi/v5"
@@ -47,12 +47,12 @@ func TestUpdateHandler(t *testing.T) {
 		},
 	}
 	mux := chi.NewRouter()
-	mux.Post("/update/{type}/{name}/{value}", updateHandler)
+	tst := GetApp("test")
+	mux.Post("/update/{type}/{name}/{value}", tst.updateHandler)
 	ts := httptest.NewServer(mux)
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-
 			resp, _ := testRequest(t, ts, tt.metod, tt.path)
 			assert.Equal(t, tt.want.statusCode, resp.StatusCode)
 			assert.Equal(t, tt.want.contentType, resp.Header.Get("Content-Type"))
