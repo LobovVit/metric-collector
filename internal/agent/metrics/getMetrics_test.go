@@ -15,7 +15,6 @@ func TestMetrics_GetMetrics(t *testing.T) {
 		name string
 		fil  fields
 	}{
-		// TODO: Add test cases.
 		{
 			name: "test1",
 			fil: fields{
