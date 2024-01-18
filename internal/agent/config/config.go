@@ -3,6 +3,7 @@ package config
 import (
 	"flag"
 	"github.com/caarlos0/env/v6"
+	"github.com/pkg/errors"
 )
 
 type Config struct {
@@ -15,7 +16,7 @@ func GetConfig() (*Config, error) {
 	config := &Config{}
 	err := env.Parse(config)
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, "env parse failed")
 	}
 
 	host := flag.String("a", "localhost:8080", "адрес эндпоинта HTTP-сервера")

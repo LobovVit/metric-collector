@@ -22,7 +22,7 @@ type MemStorage struct {
 }
 
 func NewStorage() *MemStorage {
-	return &MemStorage{make(map[string]float64), make(map[string]int64), sync.RWMutex{}, sync.RWMutex{}} //Storage
+	return &MemStorage{Gauge: make(map[string]float64), Counter: make(map[string]int64)} //Storage
 }
 
 func (ms *MemStorage) SetGauge(key string, val float64) error {
@@ -68,10 +68,7 @@ func (ms *MemStorage) GetSingle(tp string, name string) (string, error) {
 		res, ok := ms.Gauge[name]
 		if ok {
 			return fmt.Sprintf("%g", res), nil
-		} else {
-			return "", notFoundMetricError{tp, name}
 		}
-
 	case "counter":
 		ms.rwCounterMutex.RLock()
 		defer ms.rwCounterMutex.RUnlock()
@@ -79,10 +76,7 @@ func (ms *MemStorage) GetSingle(tp string, name string) (string, error) {
 		res, ok := ms.Counter[name]
 		if ok {
 			return fmt.Sprintf("%d", res), nil
-		} else {
-			return "", notFoundMetricError{tp, name}
 		}
-	default:
-		return "", notFoundMetricError{tp, name}
 	}
+	return "", notFoundMetricError{tp, name}
 }

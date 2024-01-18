@@ -12,7 +12,7 @@ type Metrics struct {
 }
 
 func GetMetricStruct() *Metrics {
-	return &Metrics{make(map[string]float64), make(map[string]int64), 0} //Storage
+	return &Metrics{Gauge: make(map[string]float64), Counter: make(map[string]int64), CounterExecMemStats: 0} //Storage
 }
 
 func (m *Metrics) GetMetrics() {

@@ -1,6 +1,7 @@
 package server
 
 import (
+	"github.com/pkg/errors"
 	"html/template"
 	"net/http"
 	"strings"
@@ -64,12 +65,12 @@ func createHTML(data []Metric) ([]byte, error) {
 </html>`
 	tmpl, err := template.New("AllMetrics").Parse(tpl)
 	if err != nil {
-		return []byte("Err Parse" + err.Error()), err
+		return []byte("Err Parse" + err.Error()), errors.Wrap(err, "parse template failed")
 	}
-	reader := new(strings.Builder)
-	err = tmpl.Execute(reader, data)
+	writer := new(strings.Builder)
+	err = tmpl.Execute(writer, data)
 	if err != nil {
-		return []byte("Err Execute" + err.Error()), err
+		return []byte("Err Execute" + err.Error()), errors.Wrap(err, "execute template failed")
 	}
-	return []byte(reader.String()), nil
+	return []byte(writer.String()), nil
 }

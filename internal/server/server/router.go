@@ -13,7 +13,7 @@ type App struct {
 
 func GetApp(host string) *App {
 	repo := actions.GetRepo()
-	return &App{host, repo}
+	return &App{host: host, storage: repo}
 }
 
 func (a *App) RouterRun() error {
