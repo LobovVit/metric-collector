@@ -17,6 +17,7 @@ func run() error {
 	if err != nil {
 		return fmt.Errorf("get config failed: %w", err)
 	}
+
 	app := server.GetApp(cfg.Host)
-	return app.RouterRun()
+	return app.RouterRun(cfg.LogLevel)
 }
