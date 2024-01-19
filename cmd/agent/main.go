@@ -2,9 +2,9 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"github.com/LobovVit/metric-collector/internal/agent/app"
 	"github.com/LobovVit/metric-collector/internal/agent/config"
-	"github.com/pkg/errors"
 	"os/signal"
 	"syscall"
 )
@@ -18,7 +18,7 @@ func main() {
 func run() error {
 	cfg, err := config.GetConfig()
 	if err != nil {
-		return errors.Wrap(err, "get config failed")
+		return fmt.Errorf("get config failed: %w", err)
 	}
 	ctx, cancel := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGHUP, syscall.SIGTERM, syscall.SIGABRT)
 	defer cancel()

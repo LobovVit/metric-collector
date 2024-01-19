@@ -1,9 +1,9 @@
 package main
 
 import (
+	"fmt"
 	"github.com/LobovVit/metric-collector/internal/server/config"
 	"github.com/LobovVit/metric-collector/internal/server/server"
-	"github.com/pkg/errors"
 )
 
 func main() {
@@ -15,7 +15,7 @@ func main() {
 func run() error {
 	cfg, err := config.GetConfig()
 	if err != nil {
-		return errors.Wrap(err, "get config failed")
+		return fmt.Errorf("get config failed: %w", err)
 	}
 	app := server.GetApp(cfg.Host)
 	return app.RouterRun()
