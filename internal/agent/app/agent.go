@@ -97,7 +97,6 @@ func (a *Agent) sendRequestJSON(ctx context.Context, metrics *metrics.Metrics) e
 			SetHeader("Content-Type", "application/json").
 			SetBody(metric).
 			Post(a.cfg.Host)
-		logger.Log.Info("Sent", zap.Binary("JSON", metric))
 		if err != nil {
 			return fmt.Errorf("send request json failed: %w", err)
 		}
