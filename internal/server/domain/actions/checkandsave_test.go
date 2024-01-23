@@ -90,7 +90,7 @@ func TestCheckAndSave(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			x := GetRepo()
-			assert.NoError(t, x.CheckAndSave(tt.tp, tt.code, tt.val), tt.want)
+			assert.NoError(t, x.CheckAndSaveText(tt.tp, tt.code, tt.val), tt.want)
 		})
 	}
 }

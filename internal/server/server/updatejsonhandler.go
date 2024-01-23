@@ -7,7 +7,7 @@ import (
 	"net/http"
 )
 
-func (a *App) updateJsonHandler(w http.ResponseWriter, r *http.Request) {
+func (a *App) updateJSONHandler(w http.ResponseWriter, r *http.Request) {
 
 	var metric metrics.Metrics
 	var buf bytes.Buffer

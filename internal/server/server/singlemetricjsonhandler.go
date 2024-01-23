@@ -7,7 +7,7 @@ import (
 	"net/http"
 )
 
-func (a *App) singleMetricJsonHandler(w http.ResponseWriter, r *http.Request) {
+func (a *App) singleMetricJSONHandler(w http.ResponseWriter, r *http.Request) {
 	var metric metrics.Metrics
 	var buf bytes.Buffer
 	_, err := buf.ReadFrom(r.Body)
