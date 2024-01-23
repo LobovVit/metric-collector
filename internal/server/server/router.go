@@ -28,7 +28,9 @@ func (a *App) RouterRun(logLevel string) error {
 	mux.Use(logger.WithLogging)
 
 	mux.Get("/", a.allMetricsHandler)
+	mux.Post("/value", a.singleMetricJsonHandler)
 	mux.Get("/value/{type}/{name}", a.singleMetricHandler)
+	mux.Post("/update", a.updateJsonHandler)
 	mux.Post("/update/{type}/{name}/{value}", a.updateHandler)
 
 	logger.Log.Info("Running server", zap.String("address", a.host))

@@ -10,7 +10,7 @@ func (a *App) singleMetricHandler(w http.ResponseWriter, r *http.Request) {
 	tp := strings.ToLower(chi.URLParam(r, "type"))
 	name := strings.ToLower(chi.URLParam(r, "name"))
 	w.Header().Set("Content-Type", "text/plain")
-	res, err := a.storage.GetSingleVal(tp, name)
+	res, err := a.storage.GetSingleValText(tp, name)
 	if err != nil {
 		w.WriteHeader(http.StatusNotFound)
 		w.Write([]byte(err.Error()))
