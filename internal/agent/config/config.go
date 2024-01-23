@@ -32,7 +32,7 @@ func GetConfig() (*Config, error) {
 		config.Host = *host
 	}
 	if config.Host != "" {
-		config.Host = "http://" + config.Host + "/update"
+		config.Host = "http://" + config.Host + "/update/"
 	}
 	if config.ReportInterval == 0 {
 		config.ReportInterval = *reportInterval

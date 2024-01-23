@@ -78,7 +78,7 @@ func (a *Agent) sendRequestText(ctx context.Context, metrics *metrics.Metrics) e
 		_, err := a.client.R().
 			SetContext(ctx).
 			SetHeader("Content-Type", "text/plain").
-			Post(fmt.Sprintf("%v/%v/%v/%v", a.cfg.Host, v.MType, v.ID, val))
+			Post(fmt.Sprintf("%v%v/%v/%v", a.cfg.Host, v.MType, v.ID, val))
 		if err != nil {
 			return fmt.Errorf("send request failed: %w", err)
 		}
