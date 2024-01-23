@@ -48,7 +48,6 @@ func (a *Agent) RunAgent(ctx context.Context, logLevel string) error {
 				m.CounterExecMemStats = tmp
 				logger.Log.Info("Err sendRequest", zap.Error(err))
 			}
-			logger.Log.Info("Sent")
 		case <-ctx.Done():
 			logger.Log.Info("Shutdown")
 			return nil
@@ -98,6 +97,7 @@ func (a *Agent) sendRequestJSON(ctx context.Context, metrics *metrics.Metrics) e
 			SetHeader("Content-Type", "application/json").
 			SetBody(metric).
 			Post(a.cfg.Host)
+		logger.Log.Info("Sent", zap.Binary("JSON", metric))
 		if err != nil {
 			return fmt.Errorf("send request json failed: %w", err)
 		}
