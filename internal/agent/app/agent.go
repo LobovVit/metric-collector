@@ -59,7 +59,7 @@ func (a *Agent) RunAgent(ctx context.Context, logLevel string) error {
 func (a *Agent) sendRequest(ctx context.Context, metrics *metrics.Metrics) error {
 	switch a.cfg.ReportFormat {
 	case "json":
-		return a.sendRequestJson(ctx, metrics)
+		return a.sendRequestJSON(ctx, metrics)
 	case "text":
 		return a.sendRequestText(ctx, metrics)
 	default:
@@ -87,7 +87,7 @@ func (a *Agent) sendRequestText(ctx context.Context, metrics *metrics.Metrics) e
 	return nil
 }
 
-func (a *Agent) sendRequestJson(ctx context.Context, metrics *metrics.Metrics) error {
+func (a *Agent) sendRequestJSON(ctx context.Context, metrics *metrics.Metrics) error {
 	for _, v := range metrics.Metrics {
 		metric, err := json.Marshal(v)
 		if err != nil {
