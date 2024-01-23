@@ -35,7 +35,7 @@ func (r Repo) CheckAndSaveText(tp string, name string, value string) error {
 	return nil
 }
 
-func (r Repo) CheckAndSaveStruct(metrics metrics.Metrics) (error, metrics.Metrics) {
+func (r Repo) CheckAndSaveStruct(metrics metrics.Metrics) (metrics.Metrics, error) {
 	switch metrics.MType {
 	case "gauge":
 		r.storage.SetGauge(metrics.ID, *metrics.Value)
@@ -44,7 +44,7 @@ func (r Repo) CheckAndSaveStruct(metrics metrics.Metrics) (error, metrics.Metric
 		tmp, _ := r.storage.GetSingle(metrics.MType, metrics.ID)
 		*metrics.Delta, _ = strconv.ParseInt(tmp, 10, 64)
 	default:
-		return badRequestErr{metrics.MType, metrics.ID}, metrics
+		return metrics, badRequestErr{metrics.MType, metrics.ID}
 	}
-	return nil, metrics
+	return metrics, nil
 }

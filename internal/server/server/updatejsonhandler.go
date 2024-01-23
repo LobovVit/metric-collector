@@ -23,7 +23,7 @@ func (a *App) updateJSONHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err, metric = a.storage.CheckAndSaveStruct(metric)
+	metric, err = a.storage.CheckAndSaveStruct(metric)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 	}
