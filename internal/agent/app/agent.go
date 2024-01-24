@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/LobovVit/metric-collector/internal/agent/compress"
 	"github.com/LobovVit/metric-collector/internal/agent/config"
 	"github.com/LobovVit/metric-collector/internal/agent/logger"
 	"github.com/LobovVit/metric-collector/internal/agent/metrics"
@@ -48,6 +49,7 @@ func (a *Agent) RunAgent(ctx context.Context, logLevel string) error {
 				m.CounterExecMemStats = tmp
 				logger.Log.Info("Err sendRequest", zap.Error(err))
 			}
+			logger.Log.Info("Sent")
 		case <-ctx.Done():
 			logger.Log.Info("Shutdown")
 			return nil
@@ -92,11 +94,17 @@ func (a *Agent) sendRequestJSON(ctx context.Context, metrics *metrics.Metrics) e
 		if err != nil {
 			return fmt.Errorf("marshal json failed: %w", err)
 		}
+		metric, err = compress.Compress(metric)
+		if err != nil {
+			return fmt.Errorf("compress json failed: %w", err)
+		}
 		_, err = a.client.R().
 			SetContext(ctx).
 			SetHeader("Content-Type", "application/json").
+			SetHeader("Content-Encoding", "gzip").
 			SetBody(metric).
 			Post(a.cfg.Host)
+
 		if err != nil {
 			return fmt.Errorf("send request json failed: %w", err)
 		}

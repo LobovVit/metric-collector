@@ -2,6 +2,7 @@ package server
 
 import (
 	"fmt"
+	"github.com/LobovVit/metric-collector/internal/server/compress"
 	"github.com/LobovVit/metric-collector/internal/server/domain/actions"
 	"github.com/LobovVit/metric-collector/internal/server/logger"
 	"github.com/go-chi/chi/v5"
@@ -26,7 +27,7 @@ func (a *App) RouterRun(logLevel string) error {
 
 	mux := chi.NewRouter()
 	mux.Use(logger.WithLogging)
-
+	mux.Use(compress.WithCompress)
 	mux.Get("/", a.allMetricsHandler)
 	mux.Post("/value/", a.singleMetricJSONHandler)
 	mux.Get("/value/{type}/{name}", a.singleMetricHandler)
