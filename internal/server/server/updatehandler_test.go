@@ -1,6 +1,7 @@
 package server
 
 import (
+	"github.com/LobovVit/metric-collector/internal/server/config"
 	"github.com/go-chi/chi/v5"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -47,7 +48,8 @@ func TestUpdateHandler(t *testing.T) {
 		},
 	}
 	mux := chi.NewRouter()
-	tst := GetApp("test")
+	cfg, _ := config.GetConfig()
+	tst := GetApp(cfg)
 	mux.Post("/update/{type}/{name}/{value}", tst.updateHandler)
 	ts := httptest.NewServer(mux)
 
