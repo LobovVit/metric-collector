@@ -1,29 +1,30 @@
 package server
 
 import (
-	"fmt"
+	"context"
 	"github.com/LobovVit/metric-collector/internal/server/compress"
+	"github.com/LobovVit/metric-collector/internal/server/config"
 	"github.com/LobovVit/metric-collector/internal/server/domain/actions"
 	"github.com/LobovVit/metric-collector/internal/server/logger"
 	"github.com/go-chi/chi/v5"
 	"go.uber.org/zap"
+	"golang.org/x/sync/errgroup"
 	"net/http"
 )
 
 type App struct {
-	host    string
+	config  *config.Config
 	storage actions.Repo
 }
 
-func GetApp(host string) *App {
-	repo := actions.GetRepo()
-	return &App{host: host, storage: repo}
+func GetApp(config *config.Config) *App {
+	repo := actions.GetRepo(config.FileStoragePath, config.Restore, config.StoreInterval, config.FileStoragePath)
+	return &App{config: config, storage: repo}
 }
 
-func (a *App) RouterRun(logLevel string) error {
-	if err := logger.Initialize(logLevel); err != nil {
-		return fmt.Errorf("log initialize failed: %w", err)
-	}
+func (a *App) RouterRun(ctx context.Context) error {
+
+	a.storage.RunPeriodicSave(a.config.FileStoragePath)
 
 	mux := chi.NewRouter()
 	mux.Use(logger.WithLogging)
@@ -34,6 +35,33 @@ func (a *App) RouterRun(logLevel string) error {
 	mux.Post("/update/", a.updateJSONHandler)
 	mux.Post("/update/{type}/{name}/{value}", a.updateHandler)
 
-	logger.Log.Info("Running server", zap.String("address", a.host))
-	return http.ListenAndServe(a.host, mux)
+	logger.Log.Info("main: starting server", zap.String("address", a.config.Host))
+
+	httpServer := &http.Server{
+		Addr:    a.config.Host,
+		Handler: mux,
+	}
+
+	g, gCtx := errgroup.WithContext(ctx)
+	g.Go(func() error {
+		return httpServer.ListenAndServe()
+	})
+	g.Go(func() error {
+		<-gCtx.Done()
+		return httpServer.Shutdown(context.Background())
+	})
+
+	if err := g.Wait(); err != nil {
+		logger.Log.Info("graceful shutdown start", zap.Error(err))
+		a.RouterShutdown()
+		logger.Log.Info("graceful shutdown end", zap.Error(err))
+	}
+	return nil
+}
+
+func (a *App) RouterShutdown() {
+	err := a.storage.SaveToFile(a.config.FileStoragePath)
+	if err != nil {
+		logger.Log.Info("save to file failed", zap.Error(err))
+	}
 }

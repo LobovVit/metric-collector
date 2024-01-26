@@ -5,11 +5,11 @@ import (
 	"strconv"
 )
 
-func (r Repo) GetSingleValText(tp string, name string) (string, error) {
+func (r *Repo) GetSingleValText(tp string, name string) (string, error) {
 	return r.storage.GetSingle(tp, name)
 }
 
-func (r Repo) GetSingleValStruct(metrics metrics.Metrics) (metrics.Metrics, error) {
+func (r *Repo) GetSingleValStruct(metrics metrics.Metrics) (metrics.Metrics, error) {
 	switch metrics.MType {
 	case "gauge":
 		val, err := r.storage.GetSingle(metrics.MType, metrics.ID)

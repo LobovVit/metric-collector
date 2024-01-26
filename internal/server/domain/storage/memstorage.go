@@ -1,7 +1,11 @@
 package storage
 
 import (
+	"encoding/json"
 	"fmt"
+	"github.com/LobovVit/metric-collector/internal/server/logger"
+	"go.uber.org/zap"
+	"os"
 	"sync"
 )
 
@@ -21,8 +25,16 @@ type MemStorage struct {
 	rwCounterMutex sync.RWMutex
 }
 
-func NewStorage() *MemStorage {
-	return &MemStorage{Gauge: make(map[string]float64), Counter: make(map[string]int64)} //Storage
+func NewStorage(filename string, needRestore bool) *MemStorage {
+	s := &MemStorage{Gauge: make(map[string]float64), Counter: make(map[string]int64)}
+	logger.Log.Info("NewStorage", zap.String("filename", filename), zap.Bool("needRestore", needRestore))
+	if needRestore {
+		err := s.LoadFromFile(filename)
+		if err != nil {
+			logger.Log.Info("LoadFromFile err", zap.Error(err))
+		}
+	}
+	return s
 }
 
 func (ms *MemStorage) SetGauge(key string, val float64) error {
@@ -79,4 +91,49 @@ func (ms *MemStorage) GetSingle(tp string, name string) (string, error) {
 		}
 	}
 	return "", notFoundMetricError{tp, name}
+}
+
+func (ms *MemStorage) SaveToFile(filename string) error {
+	ms.rwCounterMutex.RLock()
+	defer ms.rwCounterMutex.RUnlock()
+	ms.rwGaugeMutex.RLock()
+	defer ms.rwGaugeMutex.RUnlock()
+
+	tfile, err := os.Create(filename + "_tmp_")
+	if err != nil {
+		return fmt.Errorf("open tmp file failed: %w", err)
+	}
+	data, err := json.MarshalIndent(ms, "", "	")
+	if err != nil {
+		return fmt.Errorf("marshal failed: %w", err)
+	}
+	_, err = tfile.Write(data)
+	if err != nil {
+		return fmt.Errorf("write tmp failed: %w", err)
+	}
+	tfile.Close()
+
+	err = os.Rename(filename+"_tmp_", filename)
+	if err != nil {
+		return fmt.Errorf("rename file failed: %w", err)
+	}
+	return nil
+}
+
+func (ms *MemStorage) LoadFromFile(filename string) error {
+	ms.rwCounterMutex.RLock()
+	defer ms.rwCounterMutex.RUnlock()
+	ms.rwGaugeMutex.RLock()
+	defer ms.rwGaugeMutex.RUnlock()
+
+	data, err := os.ReadFile(filename)
+	if err != nil {
+		return fmt.Errorf("read file failed: %w", err)
+	}
+	//logger.Log.Info(filename, zap.String("data", string(data)))
+	err = json.Unmarshal(data, ms)
+	if err != nil {
+		return fmt.Errorf("unmarshal failed: %w", err)
+	}
+	return nil
 }
