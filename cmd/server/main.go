@@ -25,7 +25,7 @@ func run() error {
 	ctx, cancel := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGHUP, syscall.SIGTERM, syscall.SIGABRT)
 	defer cancel()
 
-	if err := logger.Initialize(cfg.LogLevel); err != nil {
+	if err = logger.Initialize(cfg.LogLevel); err != nil {
 		return fmt.Errorf("log initialize failed: %w", err)
 	}
 

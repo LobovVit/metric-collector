@@ -52,9 +52,8 @@ func (a *App) RouterRun(ctx context.Context) error {
 	})
 
 	if err := g.Wait(); err != nil {
-		logger.Log.Info("graceful shutdown start", zap.Error(err))
+		logger.Log.Info("shutdown", zap.Error(err))
 		a.RouterShutdown()
-		logger.Log.Info("graceful shutdown end", zap.Error(err))
 	}
 	return nil
 }

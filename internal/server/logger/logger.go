@@ -66,7 +66,7 @@ func WithLogging(h http.Handler) http.Handler {
 
 		duration := time.Since(start)
 
-		Log.Info("",
+		Log.Info("handler log",
 			zap.String("uri", r.RequestURI),
 			zap.String("method", r.Method),
 			zap.Durationp("duration", &duration),

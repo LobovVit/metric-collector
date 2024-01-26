@@ -1,7 +1,7 @@
 package actions
 
 import (
-	"github.com/LobovVit/metric-collector/internal/server/domain/storage"
+	"github.com/LobovVit/metric-collector/internal/server/domain/memstorage"
 	"github.com/LobovVit/metric-collector/internal/server/logger"
 	"go.uber.org/zap"
 	"time"
@@ -24,7 +24,7 @@ type repository interface {
 
 func GetRepo(filename string, needRestore bool, storeInterval int, fileStoragePath string) Repo {
 	logger.Log.Info("GetRepo", zap.String("GetRepo", filename), zap.Bool("needRestore", needRestore))
-	return Repo{storage: storage.NewStorage(filename, needRestore), storeInterval: storeInterval, fileStoragePath: fileStoragePath}
+	return Repo{storage: memstorage.NewStorage(filename, needRestore), storeInterval: storeInterval, fileStoragePath: fileStoragePath}
 }
 
 func (r *Repo) SaveToFile(filename string) error {
