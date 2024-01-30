@@ -25,17 +25,17 @@ func (r *loggingResponseWriter) Write(b []byte) (int, error) {
 	return size, err
 }
 
-func (r *loggingResponseWriter) WriteHeader(statusCode int) {
-	r.ResponseWriter.WriteHeader(statusCode)
-	r.responseData.status = statusCode // захватываем код статуса
-}
+//func (r *loggingResponseWriter) WriteHeader(statusCode int) {
+//	r.ResponseWriter.WriteHeader(statusCode)
+//	r.responseData.status = statusCode // захватываем код статуса
+//}
 
 func WithLogging(h http.Handler) http.Handler {
 	logFn := func(w http.ResponseWriter, r *http.Request) {
 		start := time.Now()
 
 		responseData := &responseData{
-			status: 0,
+			status: 200,
 			size:   0,
 		}
 		lw := loggingResponseWriter{
