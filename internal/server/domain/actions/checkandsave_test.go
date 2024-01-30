@@ -1,9 +1,10 @@
 package actions
 
 import (
-	"github.com/stretchr/testify/assert"
 	"net/http"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func TestCheckAndSave(t *testing.T) {
@@ -89,7 +90,7 @@ func TestCheckAndSave(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			x := GetRepo("1.json", false, 0, "1.json")
+			x := GetRepo(false, 0, "1.json")
 			assert.NoError(t, x.CheckAndSaveText(tt.tp, tt.code, tt.val), tt.want)
 		})
 	}
