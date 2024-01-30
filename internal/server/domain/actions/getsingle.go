@@ -1,8 +1,9 @@
 package actions
 
 import (
-	"github.com/LobovVit/metric-collector/internal/server/domain/metrics"
 	"strconv"
+
+	"github.com/LobovVit/metric-collector/internal/server/domain/metrics"
 )
 
 func (r *Repo) GetSingleValText(tp string, name string) (string, error) {

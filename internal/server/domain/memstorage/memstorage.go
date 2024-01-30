@@ -3,10 +3,12 @@ package memstorage
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/LobovVit/metric-collector/internal/server/logger"
-	"go.uber.org/zap"
 	"os"
 	"sync"
+	"time"
+
+	"github.com/LobovVit/metric-collector/pkg/logger"
+	"go.uber.org/zap"
 )
 
 type notFoundMetricError struct {
@@ -19,21 +21,23 @@ func (e notFoundMetricError) Error() string {
 }
 
 type MemStorage struct {
-	Gauge          map[string]float64
-	Counter        map[string]int64
-	rwGaugeMutex   sync.RWMutex
-	rwCounterMutex sync.RWMutex
+	Gauge           map[string]float64
+	Counter         map[string]int64
+	rwGaugeMutex    sync.RWMutex
+	rwCounterMutex  sync.RWMutex
+	storeInterval   int
+	fileStoragePath string
 }
 
-func NewStorage(filename string, needRestore bool) *MemStorage {
-	s := &MemStorage{Gauge: make(map[string]float64), Counter: make(map[string]int64)}
-	logger.Log.Info("NewStorage", zap.String("filename", filename), zap.Bool("needRestore", needRestore))
+func NewStorage(needRestore bool, storeInterval int, fileStoragePath string) *MemStorage {
+	s := &MemStorage{Gauge: make(map[string]float64), Counter: make(map[string]int64), storeInterval: storeInterval, fileStoragePath: fileStoragePath}
 	if needRestore {
-		err := s.LoadFromFile(filename)
+		err := s.LoadFromFile()
 		if err != nil {
-			logger.Log.Info("LoadFromFile err", zap.Error(err))
+			logger.Log.Error("Load from file failed", zap.Error(err))
 		}
 	}
+	s.StartPeriodicSave()
 	return s
 }
 
@@ -93,47 +97,77 @@ func (ms *MemStorage) GetSingle(tp string, name string) (string, error) {
 	return "", notFoundMetricError{tp, name}
 }
 
-func (ms *MemStorage) SaveToFile(filename string) error {
+func (ms *MemStorage) SaveToFile() error {
 	ms.rwCounterMutex.RLock()
 	defer ms.rwCounterMutex.RUnlock()
 	ms.rwGaugeMutex.RLock()
 	defer ms.rwGaugeMutex.RUnlock()
 
-	tfile, err := os.Create(filename + "_tmp_")
+	tmpfile, err := os.Create(ms.fileStoragePath + "_tmp_")
 	if err != nil {
 		return fmt.Errorf("open tmp file failed: %w", err)
 	}
-	data, err := json.MarshalIndent(ms, "", "	")
+	type tmpStorage struct {
+		Gauge   map[string]float64 `json:"gauge"`
+		Counter map[string]int64   `json:"counter"`
+	}
+	tmp := tmpStorage{Gauge: ms.Gauge, Counter: ms.Counter}
+	data, err := json.MarshalIndent(tmp, "", "	")
 	if err != nil {
 		return fmt.Errorf("marshal failed: %w", err)
 	}
-	_, err = tfile.Write(data)
+	_, err = tmpfile.Write(data)
 	if err != nil {
 		return fmt.Errorf("write tmp failed: %w", err)
 	}
-	tfile.Close()
+	err = tmpfile.Close()
+	if err != nil {
+		return fmt.Errorf("close tmp failed: %w", err)
+	}
 
-	err = os.Rename(filename+"_tmp_", filename)
+	err = os.Rename(ms.fileStoragePath+"_tmp_", ms.fileStoragePath)
 	if err != nil {
 		return fmt.Errorf("rename file failed: %w", err)
 	}
 	return nil
 }
 
-func (ms *MemStorage) LoadFromFile(filename string) error {
+func (ms *MemStorage) LoadFromFile() error {
 	ms.rwCounterMutex.RLock()
 	defer ms.rwCounterMutex.RUnlock()
 	ms.rwGaugeMutex.RLock()
 	defer ms.rwGaugeMutex.RUnlock()
 
-	data, err := os.ReadFile(filename)
+	data, err := os.ReadFile(ms.fileStoragePath)
 	if err != nil {
 		return fmt.Errorf("read file failed: %w", err)
 	}
-	//logger.Log.Info(filename, zap.String("data", string(data)))
-	err = json.Unmarshal(data, ms)
+	type tmpStorage struct {
+		Gauge   map[string]float64 `json:"gauge"`
+		Counter map[string]int64   `json:"counter"`
+	}
+	tmp := tmpStorage{}
+	err = json.Unmarshal(data, &tmp)
 	if err != nil {
 		return fmt.Errorf("unmarshal failed: %w", err)
 	}
+	ms.Gauge = tmp.Gauge
+	ms.Counter = tmp.Counter
 	return nil
+}
+
+func (ms *MemStorage) StartPeriodicSave() {
+	if ms.storeInterval == 0 {
+		return
+	}
+	saveTicker := time.NewTicker(time.Second * time.Duration(ms.storeInterval))
+	go func() {
+		for {
+			<-saveTicker.C
+			err := ms.SaveToFile()
+			if err != nil {
+				logger.Log.Error("Periodic save failed", zap.Error(err))
+			}
+		}
+	}()
 }

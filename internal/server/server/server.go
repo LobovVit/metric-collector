@@ -2,65 +2,66 @@ package server
 
 import (
 	"context"
-	"github.com/LobovVit/metric-collector/internal/server/compress"
+	"net/http"
+
 	"github.com/LobovVit/metric-collector/internal/server/config"
 	"github.com/LobovVit/metric-collector/internal/server/domain/actions"
-	"github.com/LobovVit/metric-collector/internal/server/logger"
+	"github.com/LobovVit/metric-collector/internal/server/server/middlewares"
+	"github.com/LobovVit/metric-collector/pkg/logger"
 	"github.com/go-chi/chi/v5"
 	"go.uber.org/zap"
 	"golang.org/x/sync/errgroup"
-	"net/http"
 )
 
-type App struct {
+type Server struct {
 	config  *config.Config
 	storage actions.Repo
 }
 
-func GetApp(config *config.Config) *App {
-	repo := actions.GetRepo(config.FileStoragePath, config.Restore, config.StoreInterval, config.FileStoragePath)
-	return &App{config: config, storage: repo}
+func New(config *config.Config) *Server {
+	repo := actions.GetRepo(config.Restore, config.StoreInterval, config.FileStoragePath)
+	return &Server{config: config, storage: repo}
 }
 
-func (a *App) RouterRun(ctx context.Context) error {
+func (a *Server) Run(ctx context.Context) error {
 
-	a.storage.RunPeriodicSave(a.config.FileStoragePath)
+	//a.storage.StartPeriodicSave(a.config.FileStoragePath)
 
 	mux := chi.NewRouter()
-	mux.Use(logger.WithLogging)
-	mux.Use(compress.WithCompress)
+	mux.Use(middlewares.WithLogging)
+	mux.Use(middlewares.WithCompress)
 	mux.Get("/", a.allMetricsHandler)
 	mux.Post("/value/", a.singleMetricJSONHandler)
 	mux.Get("/value/{type}/{name}", a.singleMetricHandler)
 	mux.Post("/update/", a.updateJSONHandler)
 	mux.Post("/update/{type}/{name}/{value}", a.updateHandler)
 
-	logger.Log.Info("main: starting server", zap.String("address", a.config.Host))
+	logger.Log.Info("Starting server", zap.String("address", a.config.Host))
 
 	httpServer := &http.Server{
 		Addr:    a.config.Host,
 		Handler: mux,
 	}
 
-	g, gCtx := errgroup.WithContext(ctx)
+	g := errgroup.Group{}
 	g.Go(func() error {
 		return httpServer.ListenAndServe()
 	})
 	g.Go(func() error {
-		<-gCtx.Done()
+		<-ctx.Done()
 		return httpServer.Shutdown(context.Background())
 	})
 
 	if err := g.Wait(); err != nil {
-		logger.Log.Info("shutdown", zap.Error(err))
+		logger.Log.Info("Shutdown", zap.Error(err))
 		a.RouterShutdown()
 	}
 	return nil
 }
 
-func (a *App) RouterShutdown() {
-	err := a.storage.SaveToFile(a.config.FileStoragePath)
+func (a *Server) RouterShutdown() {
+	err := a.storage.SaveToFile()
 	if err != nil {
-		logger.Log.Info("save to file failed", zap.Error(err))
+		logger.Log.Error("Save to file failed", zap.Error(err))
 	}
 }

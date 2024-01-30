@@ -3,10 +3,12 @@ package main
 import (
 	"context"
 	"fmt"
-	"github.com/LobovVit/metric-collector/internal/agent/app"
-	"github.com/LobovVit/metric-collector/internal/agent/config"
 	"os/signal"
 	"syscall"
+
+	"github.com/LobovVit/metric-collector/internal/agent/app"
+	"github.com/LobovVit/metric-collector/internal/agent/config"
+	"github.com/LobovVit/metric-collector/pkg/logger"
 )
 
 func main() {
@@ -20,8 +22,11 @@ func run() error {
 	if err != nil {
 		return fmt.Errorf("get config failed: %w", err)
 	}
+	if err := logger.Initialize(cfg.LogLevel); err != nil {
+		return fmt.Errorf("log initialize failed: %w", err)
+	}
 	ctx, cancel := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGHUP, syscall.SIGTERM, syscall.SIGABRT)
 	defer cancel()
 	agent := app.NewAgent(cfg)
-	return agent.RunAgent(ctx, cfg.LogLevel)
+	return agent.RunAgent(ctx)
 }

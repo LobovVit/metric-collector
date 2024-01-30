@@ -1,11 +1,12 @@
 package server
 
 import (
-	"github.com/go-chi/chi/v5"
 	"net/http"
+
+	"github.com/go-chi/chi/v5"
 )
 
-func (a *App) singleMetricHandler(w http.ResponseWriter, r *http.Request) {
+func (a *Server) singleMetricHandler(w http.ResponseWriter, r *http.Request) {
 	tp := chi.URLParam(r, "type")
 	name := chi.URLParam(r, "name")
 	w.Header().Set("Content-Type", "text/plain")

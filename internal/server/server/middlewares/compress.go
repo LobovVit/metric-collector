@@ -1,8 +1,10 @@
-package compress
+package middlewares
 
 import (
 	"net/http"
 	"strings"
+
+	"github.com/LobovVit/metric-collector/internal/server/compress"
 )
 
 func WithCompress(h http.Handler) http.Handler {
@@ -11,14 +13,14 @@ func WithCompress(h http.Handler) http.Handler {
 		acceptEncoding := r.Header.Get("Accept-Encoding")
 		supportsGzip := strings.Contains(acceptEncoding, "gzip")
 		if supportsGzip {
-			cw := newCompressWriter(w)
+			cw := compress.NewCompressWriter(w)
 			ow = cw
 			defer cw.Close()
 		}
 		contentEncoding := r.Header.Get("Content-Encoding")
 		sendsGzip := strings.Contains(contentEncoding, "gzip")
 		if sendsGzip {
-			cr, err := newCompressReader(r.Body)
+			cr, err := compress.NewCompressReader(r.Body)
 			if err != nil {
 				w.WriteHeader(http.StatusInternalServerError)
 				return

@@ -2,10 +2,11 @@ package actions
 
 import (
 	"fmt"
-	"github.com/LobovVit/metric-collector/internal/server/domain/metrics"
-	"github.com/LobovVit/metric-collector/internal/server/logger"
-	"go.uber.org/zap"
 	"strconv"
+
+	"github.com/LobovVit/metric-collector/internal/server/domain/metrics"
+	"github.com/LobovVit/metric-collector/pkg/logger"
+	"go.uber.org/zap"
 )
 
 type badRequestErr struct {
@@ -17,7 +18,7 @@ func (e badRequestErr) Error() string {
 	return fmt.Sprintf("bad request metric type:\"%v\" with value:\"%v\"", e.tp, e.value)
 }
 
-func (r Repo) CheckAndSaveText(tp string, name string, value string) error {
+func (r *Repo) CheckAndSaveText(tp string, name string, value string) error {
 	switch tp {
 	case "gauge":
 		v, err := strconv.ParseFloat(value, 64)
@@ -34,16 +35,16 @@ func (r Repo) CheckAndSaveText(tp string, name string, value string) error {
 	default:
 		return badRequestErr{tp, value}
 	}
-	if r.storeInterval == 0 {
-		err := r.SaveToFile(r.fileStoragePath)
+	if r.needImmediatelySave {
+		err := r.SaveToFile()
 		if err != nil {
-			logger.Log.Info("immediately save failed", zap.Error(err))
+			logger.Log.Error("Immediately save failed", zap.Error(err))
 		}
 	}
 	return nil
 }
 
-func (r Repo) CheckAndSaveStruct(metrics metrics.Metrics) (metrics.Metrics, error) {
+func (r *Repo) CheckAndSaveStruct(metrics metrics.Metrics) (metrics.Metrics, error) {
 	switch metrics.MType {
 	case "gauge":
 		r.storage.SetGauge(metrics.ID, *metrics.Value)
@@ -54,10 +55,10 @@ func (r Repo) CheckAndSaveStruct(metrics metrics.Metrics) (metrics.Metrics, erro
 	default:
 		return metrics, badRequestErr{metrics.MType, metrics.ID}
 	}
-	if r.storeInterval == 0 {
-		err := r.SaveToFile(r.fileStoragePath)
+	if r.needImmediatelySave {
+		err := r.SaveToFile()
 		if err != nil {
-			logger.Log.Info("immediately save failed", zap.Error(err))
+			logger.Log.Error("Immediately save failed", zap.Error(err))
 		}
 	}
 	return metrics, nil

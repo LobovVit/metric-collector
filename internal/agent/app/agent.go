@@ -4,14 +4,15 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/LobovVit/metric-collector/internal/agent/compress"
-	"github.com/LobovVit/metric-collector/internal/agent/config"
-	"github.com/LobovVit/metric-collector/internal/agent/logger"
-	"github.com/LobovVit/metric-collector/internal/agent/metrics"
-	"github.com/go-resty/resty/v2"
-	"go.uber.org/zap"
 	"strconv"
 	"time"
+
+	"github.com/LobovVit/metric-collector/internal/agent/compress"
+	"github.com/LobovVit/metric-collector/internal/agent/config"
+	"github.com/LobovVit/metric-collector/internal/agent/metrics"
+	"github.com/LobovVit/metric-collector/pkg/logger"
+	"github.com/go-resty/resty/v2"
+	"go.uber.org/zap"
 )
 
 type Agent struct {
@@ -25,10 +26,7 @@ func NewAgent(config *config.Config) *Agent {
 	return &agent
 }
 
-func (a *Agent) RunAgent(ctx context.Context, logLevel string) error {
-	if err := logger.Initialize(logLevel); err != nil {
-		return fmt.Errorf("log initialize failed: %w", err)
-	}
+func (a *Agent) RunAgent(ctx context.Context) error {
 	m := metrics.GetMetricStruct()
 
 	readTicker := time.NewTicker(time.Second * time.Duration(a.cfg.PollInterval))
@@ -47,7 +45,7 @@ func (a *Agent) RunAgent(ctx context.Context, logLevel string) error {
 			err := a.sendRequest(ctx, m)
 			if err != nil {
 				m.CounterExecMemStats = tmp
-				logger.Log.Info("Err sendRequest", zap.Error(err))
+				logger.Log.Error("Send request failed", zap.Error(err))
 			}
 			logger.Log.Info("Sent")
 		case <-ctx.Done():

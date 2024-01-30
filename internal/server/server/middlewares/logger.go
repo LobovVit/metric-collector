@@ -1,32 +1,12 @@
-package logger
+package middlewares
 
 import (
-	"fmt"
-	"go.uber.org/zap"
 	"net/http"
 	"time"
+
+	"github.com/LobovVit/metric-collector/pkg/logger"
+	"go.uber.org/zap"
 )
-
-var Log *zap.Logger = zap.NewNop()
-
-func Initialize(level string) error {
-	lvl, err := zap.ParseAtomicLevel(level)
-	if err != nil {
-		return fmt.Errorf("log parse level failed: %w", err)
-	}
-
-	cfg := zap.NewProductionConfig()
-
-	cfg.Level = lvl
-
-	zl, err := cfg.Build()
-	if err != nil {
-		return fmt.Errorf("log build failed: %w", err)
-	}
-
-	Log = zl
-	return nil
-}
 
 type (
 	responseData struct {
@@ -66,7 +46,7 @@ func WithLogging(h http.Handler) http.Handler {
 
 		duration := time.Since(start)
 
-		Log.Info("handler log",
+		logger.Log.Info("Handler log",
 			zap.String("uri", r.RequestURI),
 			zap.String("method", r.Method),
 			zap.Durationp("duration", &duration),

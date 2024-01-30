@@ -1,11 +1,12 @@
 package server
 
 import (
-	"github.com/go-chi/chi/v5"
 	"net/http"
+
+	"github.com/go-chi/chi/v5"
 )
 
-func (a *App) updateHandler(w http.ResponseWriter, r *http.Request) {
+func (a *Server) updateHandler(w http.ResponseWriter, r *http.Request) {
 	tp := chi.URLParam(r, "type")
 	name := chi.URLParam(r, "name")
 	value := chi.URLParam(r, "value")

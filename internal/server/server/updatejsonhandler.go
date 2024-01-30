@@ -3,11 +3,12 @@ package server
 import (
 	"bytes"
 	"encoding/json"
-	"github.com/LobovVit/metric-collector/internal/server/domain/metrics"
 	"net/http"
+
+	"github.com/LobovVit/metric-collector/internal/server/domain/metrics"
 )
 
-func (a *App) updateJSONHandler(w http.ResponseWriter, r *http.Request) {
+func (a *Server) updateJSONHandler(w http.ResponseWriter, r *http.Request) {
 
 	var metric metrics.Metrics
 	var buf bytes.Buffer
