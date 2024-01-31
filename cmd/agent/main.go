@@ -27,6 +27,6 @@ func run() error {
 	}
 	ctx, cancel := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGHUP, syscall.SIGTERM, syscall.SIGABRT)
 	defer cancel()
-	agent := app.NewAgent(cfg)
-	return agent.RunAgent(ctx)
+	agent := app.New(cfg)
+	return agent.Run(ctx)
 }

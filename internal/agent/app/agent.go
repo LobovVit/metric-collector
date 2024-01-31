@@ -20,13 +20,13 @@ type Agent struct {
 	client *resty.Client
 }
 
-func NewAgent(config *config.Config) *Agent {
+func New(config *config.Config) *Agent {
 	agent := Agent{cfg: config, client: resty.New()}
 	agent.client.R().SetHeader("Content-Type", "text/plain")
 	return &agent
 }
 
-func (a *Agent) RunAgent(ctx context.Context) error {
+func (a *Agent) Run(ctx context.Context) error {
 	m := metrics.GetMetricStruct()
 
 	readTicker := time.NewTicker(time.Second * time.Duration(a.cfg.PollInterval))

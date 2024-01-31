@@ -151,8 +151,12 @@ func (ms *MemStorage) LoadFromFile() error {
 	if err != nil {
 		return fmt.Errorf("unmarshal failed: %w", err)
 	}
-	ms.Gauge = tmp.Gauge
-	ms.Counter = tmp.Counter
+	if len(tmp.Gauge) > 0 {
+		ms.Gauge = tmp.Gauge
+	}
+	if len(tmp.Counter) > 0 {
+		ms.Counter = tmp.Counter
+	}
 	return nil
 }
 
