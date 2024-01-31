@@ -49,7 +49,7 @@ func TestUpdateHandler(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			resp, _ := testRequest(t, Ts, tt.metod, tt.path)
+			resp, _ := testRequest(t, TS, tt.metod, tt.path)
 			assert.Equal(t, tt.want.statusCode, resp.StatusCode)
 			assert.Equal(t, tt.want.contentType, resp.Header.Get("Content-Type"))
 			resp.Body.Close()

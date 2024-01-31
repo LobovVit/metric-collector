@@ -79,7 +79,7 @@ func TestUpdateJSONHandler(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			resp, _ := testJSONRequest(t, Ts, tt.metod, tt.path, tt.data)
+			resp, _ := testJSONRequest(t, TS, tt.metod, tt.path, tt.data)
 			assert.Equal(t, tt.want.statusCode, resp.StatusCode)
 			assert.Equal(t, tt.want.contentType, resp.Header.Get("Content-Type"))
 			resp.Body.Close()

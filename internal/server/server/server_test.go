@@ -7,7 +7,7 @@ import (
 	"github.com/go-chi/chi/v5"
 )
 
-var Ts = ServerRun()
+var TS = ServerRun()
 
 func ServerRun() *httptest.Server {
 	mux := chi.NewRouter()
