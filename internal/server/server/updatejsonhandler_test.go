@@ -71,11 +71,6 @@ func TestUpdateJSONHandler(t *testing.T) {
 			},
 		},
 	}
-	//mux := chi.NewRouter()
-	//cfg, _ := config.GetConfig()
-	//tst := New(cfg)
-	//mux.Post("/update/", tst.updateJSONHandler)
-	//ts := httptest.NewServer(mux)
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
