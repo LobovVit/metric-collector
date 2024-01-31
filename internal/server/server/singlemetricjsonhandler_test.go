@@ -8,8 +8,6 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/LobovVit/metric-collector/internal/server/config"
-	"github.com/go-chi/chi/v5"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -66,15 +64,10 @@ func TestUpdateJSONSingleHandler(t *testing.T) {
 			},
 		},
 	}
-	mux := chi.NewRouter()
-	cfg, _ := config.GetConfig()
-	tst := New(cfg)
-	mux.Post("/value/", tst.singleMetricJSONHandler)
-	ts := httptest.NewServer(mux)
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			resp, _ := testJSONSingleRequest(t, ts, tt.metod, tt.path, tt.data)
+			resp, _ := testJSONSingleRequest(t, Ts, tt.metod, tt.path, tt.data)
 			assert.Equal(t, tt.want.statusCode, resp.StatusCode)
 			assert.Equal(t, tt.want.contentType, resp.Header.Get("Content-Type"))
 			resp.Body.Close()

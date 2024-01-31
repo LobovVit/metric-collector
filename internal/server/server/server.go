@@ -24,9 +24,6 @@ func New(config *config.Config) *Server {
 }
 
 func (a *Server) Run(ctx context.Context) error {
-
-	//a.storage.StartPeriodicSave(a.config.FileStoragePath)
-
 	mux := chi.NewRouter()
 	mux.Use(middlewares.WithLogging)
 	mux.Use(middlewares.WithCompress)
