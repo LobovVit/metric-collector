@@ -2,6 +2,7 @@ package postgresql
 
 import (
 	"context"
+	"time"
 
 	"github.com/LobovVit/metric-collector/pkg/logger"
 	"github.com/jackc/pgx/v5"
@@ -9,7 +10,9 @@ import (
 )
 
 func NweConn(ctx context.Context, dsn string) (*pgx.Conn, error) {
-	conn, err := pgx.Connect(ctx, dsn)
+	dbctx, chancel := context.WithTimeout(ctx, time.Second*5)
+	defer chancel()
+	conn, err := pgx.Connect(dbctx, dsn)
 	if err != nil {
 		logger.Log.Error("Ошибка подключения к DB", zap.String("dsn", dsn), zap.Error(err))
 		return nil, err
