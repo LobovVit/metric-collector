@@ -1,6 +1,8 @@
 package server
 
 import (
+	"bytes"
+	"encoding/json"
 	"io"
 	"net/http"
 	"net/http/httptest"
@@ -10,9 +12,12 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func testRequest(t *testing.T, ts *httptest.Server, method,
-	path string) (*http.Response, string) {
-	req, err := http.NewRequest(method, ts.URL+path, nil)
+func testJSONSingleRequest(t *testing.T, ts *httptest.Server, method, path string, met metric) (*http.Response, string) {
+
+	data, err := json.Marshal(&met)
+	require.NoError(t, err)
+	b := bytes.NewBuffer(data)
+	req, err := http.NewRequest(method, ts.URL+path, b)
 	require.NoError(t, err)
 
 	resp, err := ts.Client().Do(req)
@@ -25,7 +30,8 @@ func testRequest(t *testing.T, ts *httptest.Server, method,
 	return resp, string(respBody)
 }
 
-func TestUpdateHandler(t *testing.T) {
+func TestUpdateJSONSingleHandler(t *testing.T) {
+
 	type want struct {
 		contentType string
 		statusCode  int
@@ -34,22 +40,34 @@ func TestUpdateHandler(t *testing.T) {
 		name  string
 		metod string
 		path  string
+		data  metric
 		want  want
 	}{
 		{
 			name:  "test1",
 			metod: http.MethodPost,
-			path:  "/update/counter/someMetric/527",
+			path:  "/value/",
+			data:  metric{ID: "qqq", MType: "counter"},
 			want: want{
-				contentType: "text/plain",
-				statusCode:  200,
+				contentType: "text/plain; charset=utf-8",
+				statusCode:  404,
+			},
+		},
+		{
+			name:  "test2",
+			metod: http.MethodPost,
+			path:  "/value/",
+			data:  metric{ID: "www", MType: "gauge"},
+			want: want{
+				contentType: "text/plain; charset=utf-8",
+				statusCode:  404,
 			},
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			resp, _ := testRequest(t, TS, tt.metod, tt.path)
+			resp, _ := testJSONSingleRequest(t, TS, tt.metod, tt.path, tt.data)
 			assert.Equal(t, tt.want.statusCode, resp.StatusCode)
 			assert.Equal(t, tt.want.contentType, resp.Header.Get("Content-Type"))
 			resp.Body.Close()

@@ -1,16 +1,16 @@
 package server
 
 import (
-	"github.com/go-chi/chi/v5"
 	"net/http"
-	"strings"
+
+	"github.com/go-chi/chi/v5"
 )
 
-func (a *App) singleMetricHandler(w http.ResponseWriter, r *http.Request) {
-	tp := strings.ToLower(chi.URLParam(r, "type"))
-	name := strings.ToLower(chi.URLParam(r, "name"))
+func (a *Server) singleMetricHandler(w http.ResponseWriter, r *http.Request) {
+	tp := chi.URLParam(r, "type")
+	name := chi.URLParam(r, "name")
 	w.Header().Set("Content-Type", "text/plain")
-	res, err := a.storage.GetSingleVal(tp, name)
+	res, err := a.storage.GetSingleValText(tp, name)
 	if err != nil {
 		w.WriteHeader(http.StatusNotFound)
 		w.Write([]byte(err.Error()))
