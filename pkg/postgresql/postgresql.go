@@ -10,10 +10,15 @@ import (
 )
 
 func NweConn(ctx context.Context, dsn string) (*pgx.Conn, error) {
-	logger.Log.Error("YA DSN", zap.String("dsn", dsn))
+	logger.Log.Info("YA DSN", zap.String("dsn", dsn))
 	dbctx, chancel := context.WithTimeout(ctx, time.Second*5)
 	defer chancel()
-	conn, err := pgx.Connect(dbctx, dsn)
+	conConfig, err := pgx.ParseConfig(dsn)
+	if err != nil {
+		logger.Log.Error("Parse config failed", zap.Error(err))
+		return nil, err
+	}
+	conn, err := pgx.ConnectConfig(dbctx, conConfig)
 	if err != nil {
 		logger.Log.Error("Ошибка подключения к DB", zap.String("dsn", dsn), zap.Error(err))
 		return nil, err

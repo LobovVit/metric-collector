@@ -5,7 +5,9 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/LobovVit/metric-collector/pkg/logger"
 	"github.com/caarlos0/env/v6"
+	"go.uber.org/zap"
 )
 
 type Config struct {
@@ -60,6 +62,7 @@ func GetConfig() (*Config, error) {
 	if config.DSN != "" {
 		config.DSN = "postgresql://" + config.DSN
 	}
+	logger.Log.Info("YA-DSN=", zap.String("DSN", config.DSN))
 
 	return config, nil
 }
