@@ -8,7 +8,9 @@ import (
 	"github.com/LobovVit/metric-collector/internal/server/domain/actions"
 	"github.com/LobovVit/metric-collector/internal/server/server/middlewares"
 	"github.com/LobovVit/metric-collector/pkg/logger"
+	"github.com/LobovVit/metric-collector/pkg/postgresql"
 	"github.com/go-chi/chi/v5"
+	"github.com/jackc/pgx/v5"
 	"go.uber.org/zap"
 	"golang.org/x/sync/errgroup"
 )
@@ -16,6 +18,7 @@ import (
 type Server struct {
 	config  *config.Config
 	storage actions.Repo
+	dbCon   *pgx.Conn
 }
 
 func New(config *config.Config) *Server {
@@ -24,10 +27,18 @@ func New(config *config.Config) *Server {
 }
 
 func (a *Server) Run(ctx context.Context) error {
+
+	dbCon, err := postgresql.NweConn(ctx, a.config.DSN)
+	if err != nil {
+		logger.Log.Error("Get db connection failed", zap.Error(err))
+	}
+	a.dbCon = dbCon
+
 	mux := chi.NewRouter()
 	mux.Use(middlewares.WithLogging)
 	mux.Use(middlewares.WithCompress)
 	mux.Get("/", a.allMetricsHandler)
+	mux.Get("/ping/", a.dbPingHandler)
 	mux.Post("/value/", a.singleMetricJSONHandler)
 	mux.Get("/value/{type}/{name}", a.singleMetricHandler)
 	mux.Post("/update/", a.updateJSONHandler)
