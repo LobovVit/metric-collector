@@ -10,7 +10,7 @@ import (
 	"github.com/LobovVit/metric-collector/pkg/logger"
 	"github.com/LobovVit/metric-collector/pkg/postgresql"
 	"github.com/go-chi/chi/v5"
-	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx"
 	"go.uber.org/zap"
 	"golang.org/x/sync/errgroup"
 )
