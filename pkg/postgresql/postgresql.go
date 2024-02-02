@@ -10,6 +10,7 @@ import (
 )
 
 func NweConn(ctx context.Context, dsn string) (*pgx.Conn, error) {
+	logger.Log.Error("YA DSN", zap.String("dsn", dsn))
 	dbctx, chancel := context.WithTimeout(ctx, time.Second*5)
 	defer chancel()
 	conn, err := pgx.Connect(dbctx, dsn)
