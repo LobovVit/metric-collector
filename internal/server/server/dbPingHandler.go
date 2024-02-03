@@ -5,7 +5,7 @@ import (
 )
 
 func (a *Server) dbPingHandler(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "text/plain")
+	//w.Header().Set("Content-Type", "text/plain")
 	if a.dbCon == nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		return
