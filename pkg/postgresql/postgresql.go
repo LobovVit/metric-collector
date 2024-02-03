@@ -10,7 +10,7 @@ import (
 )
 
 func NweConn(ctx context.Context, dsn string) (*sql.DB, error) {
-	logger.Log.Info("YA DSN", zap.String("dsn", dsn))
+	logger.Log.Info("YA=DSN", zap.String("dsn", dsn))
 	//dbctx, chancel := context.WithTimeout(ctx, time.Second*5)
 	//defer chancel()
 	conn, err := sql.Open("postgres", dsn)
