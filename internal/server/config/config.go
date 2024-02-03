@@ -57,9 +57,9 @@ func GetConfig() (*Config, error) {
 	if config.DSN == "" {
 		config.DSN = *dsn
 	}
-	if config.DSN != "" {
-		config.DSN = "postgres://" + config.DSN
-	}
+	//if config.DSN != "" {
+	//	config.DSN = "postgres://" + config.DSN
+	//}
 
 	return config, nil
 }
