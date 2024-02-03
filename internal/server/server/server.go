@@ -2,6 +2,7 @@ package server
 
 import (
 	"context"
+	"database/sql"
 	"net/http"
 
 	"github.com/LobovVit/metric-collector/internal/server/config"
@@ -10,7 +11,6 @@ import (
 	"github.com/LobovVit/metric-collector/pkg/logger"
 	"github.com/LobovVit/metric-collector/pkg/postgresql"
 	"github.com/go-chi/chi/v5"
-	"github.com/jackc/pgx/v5"
 	"go.uber.org/zap"
 	"golang.org/x/sync/errgroup"
 )
@@ -18,7 +18,7 @@ import (
 type Server struct {
 	config  *config.Config
 	storage actions.Repo
-	dbCon   *pgx.Conn
+	dbCon   *sql.DB //*pgx.Conn
 }
 
 func New(config *config.Config) *Server {

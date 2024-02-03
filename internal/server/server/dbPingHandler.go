@@ -1,7 +1,6 @@
 package server
 
 import (
-	"context"
 	"net/http"
 )
 
@@ -11,7 +10,7 @@ func (a *Server) dbPingHandler(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
-	err := a.dbCon.Ping(context.Background())
+	err := a.dbCon.Ping()
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		w.Write([]byte(err.Error()))
