@@ -38,7 +38,7 @@ func (a *Server) Run(ctx context.Context) error {
 	mux.Use(middlewares.WithLogging)
 	mux.Use(middlewares.WithCompress)
 	mux.Get("/", a.allMetricsHandler)
-	mux.Get("/ping/", a.dbPingHandler)
+	mux.Get("/ping", a.dbPingHandler)
 	mux.Post("/value/", a.singleMetricJSONHandler)
 	mux.Get("/value/{type}/{name}", a.singleMetricHandler)
 	mux.Post("/update/", a.updateJSONHandler)
