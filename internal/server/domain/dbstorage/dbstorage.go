@@ -63,7 +63,6 @@ func (ms *DBStorage) GetAll() map[string]map[string]string {
 
 	selectSQL := `select id, MType, coalesce(Delta,-1), coalesce(Value,-1) from metrics`
 	rows, err := ms.dbConnections.Query(selectSQL)
-	defer rows.Close()
 	if err != nil {
 		logger.Log.Error("Select all failed", zap.Error(err))
 		return ret
@@ -72,6 +71,7 @@ func (ms *DBStorage) GetAll() map[string]map[string]string {
 		logger.Log.Error("Select all failed", zap.Error(err))
 		return ret
 	}
+	defer rows.Close()
 	var (
 		id, mType string
 		delta     int64
