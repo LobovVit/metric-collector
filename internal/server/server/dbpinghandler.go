@@ -6,14 +6,10 @@ import (
 
 func (a *Server) dbPingHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "text/plain")
-	if a.dbCon == nil {
-		w.WriteHeader(http.StatusInternalServerError)
-		return
-	}
-	err := a.dbCon.Ping()
+	err := a.storage.Ping()
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
-		w.Write([]byte(err.Error()))
+		w.Write([]byte("Error"))
 		return
 	}
 	w.WriteHeader(http.StatusOK)

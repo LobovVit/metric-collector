@@ -1,6 +1,8 @@
 package actions
 
 import (
+	"github.com/LobovVit/metric-collector/internal/server/config"
+	"github.com/LobovVit/metric-collector/internal/server/domain/dbstorage"
 	"github.com/LobovVit/metric-collector/internal/server/domain/memstorage"
 )
 
@@ -16,14 +18,18 @@ type repository interface {
 	GetSingle(tp string, name string) (string, error)
 	SaveToFile() error
 	LoadFromFile() error
+	Ping() error
 }
 
-func GetRepo(needRestore bool, storeInterval int, fileStoragePath string) Repo {
-	nImmSave := false
-	if storeInterval == 0 {
-		nImmSave = true
+func GetRepo(config *config.Config) Repo {
+	if config.DSN == "" {
+		nImmSave := false
+		if config.StoreInterval == 0 {
+			nImmSave = true
+		}
+		return Repo{storage: memstorage.NewStorage(config.Restore, config.StoreInterval, config.FileStoragePath), needImmediatelySave: nImmSave}
 	}
-	return Repo{storage: memstorage.NewStorage(needRestore, storeInterval, fileStoragePath), needImmediatelySave: nImmSave}
+	return Repo{storage: dbstorage.NewStorage(config.DSN)}
 }
 
 func (r *Repo) SaveToFile() error {
@@ -32,4 +38,8 @@ func (r *Repo) SaveToFile() error {
 
 func (r *Repo) LoadFromFile() error {
 	return r.storage.LoadFromFile()
+}
+
+func (r *Repo) Ping() interface{} {
+	return r.storage.Ping()
 }

@@ -2,14 +2,12 @@ package server
 
 import (
 	"context"
-	"database/sql"
 	"net/http"
 
 	"github.com/LobovVit/metric-collector/internal/server/config"
 	"github.com/LobovVit/metric-collector/internal/server/domain/actions"
-	"github.com/LobovVit/metric-collector/internal/server/server/middlewares"
+	"github.com/LobovVit/metric-collector/internal/server/server/middleware"
 	"github.com/LobovVit/metric-collector/pkg/logger"
-	"github.com/LobovVit/metric-collector/pkg/postgresql"
 	"github.com/go-chi/chi/v5"
 	"go.uber.org/zap"
 	"golang.org/x/sync/errgroup"
@@ -18,25 +16,18 @@ import (
 type Server struct {
 	config  *config.Config
 	storage actions.Repo
-	dbCon   *sql.DB //*pgx.Conn
 }
 
 func New(config *config.Config) *Server {
-	repo := actions.GetRepo(config.Restore, config.StoreInterval, config.FileStoragePath)
+	repo := actions.GetRepo(config)
 	return &Server{config: config, storage: repo}
 }
 
 func (a *Server) Run(ctx context.Context) error {
 
-	dbCon, err := postgresql.NweConn(ctx, a.config.DSN)
-	if err != nil {
-		logger.Log.Error("Get db connection failed", zap.Error(err))
-	}
-	a.dbCon = dbCon
-
 	mux := chi.NewRouter()
-	mux.Use(middlewares.WithLogging)
-	mux.Use(middlewares.WithCompress)
+	mux.Use(middleware.WithLogging)
+	mux.Use(middleware.WithCompress)
 	mux.Get("/", a.allMetricsHandler)
 	mux.Get("/ping", a.dbPingHandler)
 	mux.Post("/value/", a.singleMetricJSONHandler)

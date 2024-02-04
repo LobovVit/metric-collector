@@ -175,3 +175,7 @@ func (ms *MemStorage) StartPeriodicSave() {
 		}
 	}()
 }
+
+func (ms *MemStorage) Ping() error {
+	return fmt.Errorf("no db")
+}
