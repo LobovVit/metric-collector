@@ -18,16 +18,16 @@ func (e notFoundMetricError) Error() string {
 	return fmt.Sprintf("not found metric type:\"%v\" with name:\"%v\"", e.tp, e.name)
 }
 
-type DbStorage struct {
+type DBStorage struct {
 	dbConnections *sql.DB
 }
 
-func NewStorage(dsn string) *DbStorage {
+func NewStorage(dsn string) *DBStorage {
 	dbCon, err := postgresql.NweConn(dsn)
 	if err != nil {
 		logger.Log.Error("Get db connection failed", zap.Error(err))
 	}
-	s := &DbStorage{dbConnections: dbCon}
+	s := &DBStorage{dbConnections: dbCon}
 	createSQL := `create table IF NOT EXISTS metrics (ID text PRIMARY KEY,MType text, Delta bigint, Value double precision)`
 	_, err = s.dbConnections.Exec(createSQL)
 	if err != nil {
@@ -36,7 +36,7 @@ func NewStorage(dsn string) *DbStorage {
 	return s
 }
 
-func (ms *DbStorage) SetGauge(key string, val float64) error {
+func (ms *DBStorage) SetGauge(key string, val float64) error {
 	upsertSQL := `INSERT INTO metrics (id, MType, Value) VALUES ($1, 'Gauge', $2) ON CONFLICT(id) DO UPDATE set Value = EXCLUDED.Value`
 	_, err := ms.dbConnections.Exec(upsertSQL, key, val)
 	if err != nil {
@@ -46,7 +46,7 @@ func (ms *DbStorage) SetGauge(key string, val float64) error {
 	return nil
 }
 
-func (ms *DbStorage) SetCounter(key string, val int64) error {
+func (ms *DBStorage) SetCounter(key string, val int64) error {
 	upsertSQL := `INSERT INTO metrics AS a (id, MType, Delta) VALUES ($1, 'Counter', $2) ON CONFLICT(id) DO UPDATE set Delta = a.Delta + EXCLUDED.Delta`
 	_, err := ms.dbConnections.Exec(upsertSQL, key, val)
 	if err != nil {
@@ -56,7 +56,7 @@ func (ms *DbStorage) SetCounter(key string, val int64) error {
 	return nil
 }
 
-func (ms *DbStorage) GetAll() map[string]map[string]string {
+func (ms *DBStorage) GetAll() map[string]map[string]string {
 	ret := make(map[string]map[string]string, 2)
 	retGauge := make(map[string]string)
 	retCounter := make(map[string]string)
@@ -91,7 +91,7 @@ func (ms *DbStorage) GetAll() map[string]map[string]string {
 	return ret
 }
 
-func (ms *DbStorage) GetSingle(tp string, name string) (string, error) {
+func (ms *DBStorage) GetSingle(tp string, name string) (string, error) {
 
 	selectSQL := `select id, MType, coalesce(Delta,-1), coalesce(Value,-1) from metrics where MType = $1 and id = $2`
 	row := ms.dbConnections.QueryRow(selectSQL, tp, name)
@@ -114,14 +114,14 @@ func (ms *DbStorage) GetSingle(tp string, name string) (string, error) {
 	return "", notFoundMetricError{tp, name}
 }
 
-func (ms *DbStorage) LoadFromFile() error {
+func (ms *DBStorage) LoadFromFile() error {
 	return nil
 }
 
-func (ms *DbStorage) SaveToFile() error {
+func (ms *DBStorage) SaveToFile() error {
 	return nil
 }
 
-func (ms *DbStorage) Ping() error {
+func (ms *DBStorage) Ping() error {
 	return ms.dbConnections.Ping()
 }
