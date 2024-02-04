@@ -33,7 +33,6 @@ func (r *loggingResponseWriter) Write(b []byte) (int, error) {
 func WithLogging(h http.Handler) http.Handler {
 	logFn := func(w http.ResponseWriter, r *http.Request) {
 		start := time.Now()
-
 		responseData := &responseData{
 			status: 0,
 			size:   0,
