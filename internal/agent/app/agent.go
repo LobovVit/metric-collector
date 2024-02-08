@@ -61,6 +61,8 @@ func (a *Agent) sendRequest(ctx context.Context, metrics *metrics.Metrics) error
 		return a.sendRequestJSON(ctx, metrics)
 	case "text":
 		return a.sendRequestText(ctx, metrics)
+	case "batch":
+		return a.sendRequestBatchJSON(ctx, metrics)
 	default:
 		return fmt.Errorf("incorrect format")
 	}
@@ -106,6 +108,28 @@ func (a *Agent) sendRequestJSON(ctx context.Context, metrics *metrics.Metrics) e
 		if err != nil {
 			return fmt.Errorf("send request json failed: %w", err)
 		}
+	}
+	return nil
+}
+
+func (a *Agent) sendRequestBatchJSON(ctx context.Context, metrics *metrics.Metrics) error {
+	data, err := json.Marshal(metrics)
+	if err != nil {
+		return fmt.Errorf("marshal json failed: %w", err)
+	}
+	data, err = compress.Compress(data)
+	if err != nil {
+		return fmt.Errorf("compress json failed: %w", err)
+	}
+	_, err = a.client.R().
+		SetContext(ctx).
+		SetHeader("Content-Type", "application/json").
+		SetHeader("Content-Encoding", "gzip").
+		SetBody(data).
+		Post(a.cfg.Host)
+
+	if err != nil {
+		return fmt.Errorf("send request json failed: %w", err)
 	}
 	return nil
 }

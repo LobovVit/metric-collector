@@ -7,6 +7,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/LobovVit/metric-collector/internal/server/domain/metrics"
 	"github.com/LobovVit/metric-collector/pkg/logger"
 	"go.uber.org/zap"
 )
@@ -178,4 +179,21 @@ func (ms *MemStorage) StartPeriodicSave() {
 
 func (ms *MemStorage) Ping() error {
 	return fmt.Errorf("no db")
+}
+
+func (ms *MemStorage) SetBatch(metrics metrics.SlMetrics) error {
+	ms.rwCounterMutex.RLock()
+	defer ms.rwCounterMutex.RUnlock()
+	ms.rwGaugeMutex.RLock()
+	defer ms.rwGaugeMutex.RUnlock()
+
+	for _, v := range metrics.Metrics {
+		if v.MType == "gauge" {
+			ms.Gauge[v.ID] += *v.Value
+		}
+		if v.MType == "counter" {
+			ms.Counter[v.ID] += *v.Delta
+		}
+	}
+	return nil
 }

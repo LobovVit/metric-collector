@@ -63,3 +63,14 @@ func (r *Repo) CheckAndSaveStruct(metrics metrics.Metrics) (metrics.Metrics, err
 	}
 	return metrics, nil
 }
+
+func (r *Repo) CheckAndSaveBatch(metrics metrics.SlMetrics) (metrics.SlMetrics, error) {
+	r.storage.SetBatch(metrics)
+	if r.needImmediatelySave {
+		err := r.SaveToFile()
+		if err != nil {
+			logger.Log.Error("Immediately save failed", zap.Error(err))
+		}
+	}
+	return metrics, nil
+}

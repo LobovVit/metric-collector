@@ -4,6 +4,7 @@ import (
 	"github.com/LobovVit/metric-collector/internal/server/config"
 	"github.com/LobovVit/metric-collector/internal/server/domain/dbstorage"
 	"github.com/LobovVit/metric-collector/internal/server/domain/memstorage"
+	"github.com/LobovVit/metric-collector/internal/server/domain/metrics"
 )
 
 type Repo struct {
@@ -19,6 +20,7 @@ type repository interface {
 	SaveToFile() error
 	LoadFromFile() error
 	Ping() error
+	SetBatch(metrics metrics.SlMetrics) error
 }
 
 func GetRepo(config *config.Config) Repo {
@@ -40,6 +42,10 @@ func (r *Repo) LoadFromFile() error {
 	return r.storage.LoadFromFile()
 }
 
-func (r *Repo) Ping() interface{} {
+func (r *Repo) Ping() error {
 	return r.storage.Ping()
+}
+
+func (r *Repo) SetBatch(metrics metrics.SlMetrics) error {
+	return r.storage.SetBatch(metrics)
 }

@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"fmt"
 
+	"github.com/LobovVit/metric-collector/internal/server/domain/metrics"
 	"github.com/LobovVit/metric-collector/pkg/logger"
 	"github.com/LobovVit/metric-collector/pkg/postgresql"
 	"go.uber.org/zap"
@@ -37,21 +38,21 @@ func NewStorage(dsn string) *DBStorage {
 }
 
 func (ms *DBStorage) SetGauge(key string, val float64) error {
-	upsertSQL := `INSERT INTO metrics (id, MType, Value) VALUES ($1, 'Gauge', $2) ON CONFLICT(id) DO UPDATE set Value = EXCLUDED.Value`
+	upsertSQL := `INSERT INTO metrics (id, MType, Value) VALUES ($1, 'gauge', $2) ON CONFLICT(id) DO UPDATE set Value = EXCLUDED.Value`
 	_, err := ms.dbConnections.Exec(upsertSQL, key, val)
 	if err != nil {
 		logger.Log.Error("Upsert failed", zap.Error(err))
-		return err
+		return fmt.Errorf("upsert failed: %w", err)
 	}
 	return nil
 }
 
 func (ms *DBStorage) SetCounter(key string, val int64) error {
-	upsertSQL := `INSERT INTO metrics AS a (id, MType, Delta) VALUES ($1, 'Counter', $2) ON CONFLICT(id) DO UPDATE set Delta = a.Delta + EXCLUDED.Delta`
+	upsertSQL := `INSERT INTO metrics AS a (id, MType, Delta) VALUES ($1, 'counter', $2) ON CONFLICT(id) DO UPDATE set Delta = a.Delta + EXCLUDED.Delta`
 	_, err := ms.dbConnections.Exec(upsertSQL, key, val)
 	if err != nil {
 		logger.Log.Error("Upsert failed", zap.Error(err))
-		return err
+		return fmt.Errorf("upsert failed: %w", err)
 	}
 	return nil
 }
@@ -82,16 +83,17 @@ func (ms *DBStorage) GetAll() map[string]map[string]string {
 		if err != nil {
 			logger.Log.Error("Select rows failed", zap.Error(err))
 		}
-		fmt.Println(id, "-", mType, "-", delta, "-", value)
-		if mType == "Counter" {
+		if mType == "counter" {
 			retCounter[id] = fmt.Sprintf("%d", delta)
 		}
-		if mType == "Gauge" {
+		if mType == "gauge" {
 			retGauge[id] = fmt.Sprintf("%g", value)
 		}
 	}
-	ret["Counter"] = retCounter
-	ret["Gauge"] = retGauge
+	logger.Log.Info("cnt", zap.Int("counter", len(retCounter)))
+	logger.Log.Info("cnt", zap.Int("gauge", len(retGauge)))
+	ret["counter"] = retCounter
+	ret["gauge"] = retGauge
 	return ret
 }
 
@@ -110,9 +112,9 @@ func (ms *DBStorage) GetSingle(tp string, name string) (string, error) {
 		return "", fmt.Errorf("select single failed: %w", err)
 	}
 	switch mType {
-	case "Gauge":
+	case "gauge":
 		return fmt.Sprintf("%g", value), nil
-	case "Counter":
+	case "counter":
 		return fmt.Sprintf("%d", delta), nil
 	}
 	return "", notFoundMetricError{tp, name}
@@ -128,4 +130,26 @@ func (ms *DBStorage) SaveToFile() error {
 
 func (ms *DBStorage) Ping() error {
 	return ms.dbConnections.Ping()
+}
+func (ms *DBStorage) SetBatch(metrics metrics.SlMetrics) error {
+	tx, err := ms.dbConnections.Begin()
+	if err != nil {
+		return fmt.Errorf("open transaction failed: %w", err)
+	}
+	defer tx.Rollback()
+
+	upsertSQL := `INSERT INTO metrics AS a (id, MType, Value, Delta) VALUES ($1, $2, $3, $4) ON CONFLICT(id) DO UPDATE set Delta = a.Delta + EXCLUDED.Delta,Value = EXCLUDED.Value`
+	stmt, err := tx.Prepare(upsertSQL)
+	if err != nil {
+		return fmt.Errorf("prepare sql failed: %w", err)
+	}
+	defer stmt.Close()
+
+	for _, v := range metrics.Metrics {
+		_, err := stmt.Exec(v.ID, v.MType, v.Value, v.Delta)
+		if err != nil {
+			return fmt.Errorf("exec sql failed: %w", err)
+		}
+	}
+	return tx.Commit()
 }
