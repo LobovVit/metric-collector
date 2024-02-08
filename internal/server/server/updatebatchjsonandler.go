@@ -12,7 +12,7 @@ import (
 
 func (a *Server) updateBatchJSONandler(w http.ResponseWriter, r *http.Request) {
 
-	var metricsBatch metrics.SlMetrics
+	var metricsBatch []metrics.Metrics //metrics.SlMetrics
 	var buf bytes.Buffer
 	_, err := buf.ReadFrom(r.Body)
 	logger.Log.Info("body", zap.String("q", buf.String()))

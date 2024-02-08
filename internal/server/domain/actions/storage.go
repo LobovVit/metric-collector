@@ -20,7 +20,7 @@ type repository interface {
 	SaveToFile() error
 	LoadFromFile() error
 	Ping() error
-	SetBatch(metrics metrics.SlMetrics) error
+	SetBatch(metrics []metrics.Metrics) error
 }
 
 func GetRepo(config *config.Config) Repo {
@@ -46,6 +46,6 @@ func (r *Repo) Ping() error {
 	return r.storage.Ping()
 }
 
-func (r *Repo) SetBatch(metrics metrics.SlMetrics) error {
+func (r *Repo) SetBatch(metrics []metrics.Metrics) error {
 	return r.storage.SetBatch(metrics)
 }

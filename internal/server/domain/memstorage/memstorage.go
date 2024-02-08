@@ -181,13 +181,13 @@ func (ms *MemStorage) Ping() error {
 	return fmt.Errorf("no db")
 }
 
-func (ms *MemStorage) SetBatch(metrics metrics.SlMetrics) error {
+func (ms *MemStorage) SetBatch(metrics []metrics.Metrics) error {
 	ms.rwCounterMutex.RLock()
 	defer ms.rwCounterMutex.RUnlock()
 	ms.rwGaugeMutex.RLock()
 	defer ms.rwGaugeMutex.RUnlock()
 
-	for _, v := range metrics.Metrics {
+	for _, v := range metrics {
 		if v.MType == "gauge" {
 			ms.Gauge[v.ID] += *v.Value
 		}

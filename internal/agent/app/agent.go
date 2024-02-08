@@ -113,7 +113,7 @@ func (a *Agent) sendRequestJSON(ctx context.Context, metrics *metrics.Metrics) e
 }
 
 func (a *Agent) sendRequestBatchJSON(ctx context.Context, metrics *metrics.Metrics) error {
-	data, err := json.Marshal(metrics)
+	data, err := json.Marshal(metrics.Metrics)
 	if err != nil {
 		return fmt.Errorf("marshal json failed: %w", err)
 	}

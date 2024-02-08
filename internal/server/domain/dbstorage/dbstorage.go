@@ -131,7 +131,7 @@ func (ms *DBStorage) SaveToFile() error {
 func (ms *DBStorage) Ping() error {
 	return ms.dbConnections.Ping()
 }
-func (ms *DBStorage) SetBatch(metrics metrics.SlMetrics) error {
+func (ms *DBStorage) SetBatch(metrics []metrics.Metrics) error {
 	tx, err := ms.dbConnections.Begin()
 	if err != nil {
 		return fmt.Errorf("open transaction failed: %w", err)
@@ -145,7 +145,7 @@ func (ms *DBStorage) SetBatch(metrics metrics.SlMetrics) error {
 	}
 	defer stmt.Close()
 
-	for _, v := range metrics.Metrics {
+	for _, v := range metrics {
 		_, err := stmt.Exec(v.ID, v.MType, v.Value, v.Delta)
 		if err != nil {
 			return fmt.Errorf("exec sql failed: %w", err)

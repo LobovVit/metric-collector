@@ -64,7 +64,7 @@ func (r *Repo) CheckAndSaveStruct(metrics metrics.Metrics) (metrics.Metrics, err
 	return metrics, nil
 }
 
-func (r *Repo) CheckAndSaveBatch(metrics metrics.SlMetrics) (metrics.SlMetrics, error) {
+func (r *Repo) CheckAndSaveBatch(metrics []metrics.Metrics) ([]metrics.Metrics, error) {
 	r.storage.SetBatch(metrics)
 	if r.needImmediatelySave {
 		err := r.SaveToFile()
