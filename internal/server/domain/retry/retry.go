@@ -48,10 +48,7 @@ func (re *Retry) isRetryable(err error) bool {
 		return true
 	}
 	var osErr *os.SyscallError
-	if errors.As(err, &osErr) {
-		return true
-	}
-	return false
+	return errors.As(err, &osErr)
 }
 
 func (re *Retry) Run(f func() error) error {
