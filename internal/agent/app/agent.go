@@ -56,16 +56,26 @@ func (a *Agent) Run(ctx context.Context) error {
 }
 
 func (a *Agent) sendRequest(ctx context.Context, metrics *metrics.Metrics) error {
-	switch a.cfg.ReportFormat {
-	case "json":
-		return a.sendRequestJSON(ctx, metrics)
-	case "text":
-		return a.sendRequestText(ctx, metrics)
-	case "batch":
-		return a.sendRequestBatchJSON(ctx, metrics)
-	default:
-		return fmt.Errorf("incorrect format")
+	var ret error
+	for sendCounter := 1; sendCounter <= 5; sendCounter = sendCounter + 2 {
+		switch a.cfg.ReportFormat {
+		case "json":
+			ret = a.sendRequestJSON(ctx, metrics)
+		case "text":
+			ret = a.sendRequestText(ctx, metrics)
+		case "batch":
+			ret = a.sendRequestBatchJSON(ctx, metrics)
+		default:
+			return fmt.Errorf("incorrect format")
+		}
+		if ret != nil {
+			time.Sleep(time.Second * time.Duration(sendCounter))
+			logger.Log.Info("Retry", zap.Int("sendCounter", sendCounter))
+		} else {
+			break
+		}
 	}
+	return ret
 }
 
 func (a *Agent) sendRequestText(ctx context.Context, metrics *metrics.Metrics) error {

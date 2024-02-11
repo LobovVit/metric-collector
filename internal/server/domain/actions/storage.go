@@ -5,6 +5,7 @@ import (
 	"github.com/LobovVit/metric-collector/internal/server/domain/dbstorage"
 	"github.com/LobovVit/metric-collector/internal/server/domain/memstorage"
 	"github.com/LobovVit/metric-collector/internal/server/domain/metrics"
+	"github.com/LobovVit/metric-collector/internal/server/domain/retry"
 )
 
 type Repo struct {
@@ -35,17 +36,21 @@ func GetRepo(config *config.Config) Repo {
 }
 
 func (r *Repo) SaveToFile() error {
-	return r.storage.SaveToFile()
+	repeat := retry.New(3)
+	return repeat.Run(r.storage.SaveToFile)
 }
 
 func (r *Repo) LoadFromFile() error {
-	return r.storage.LoadFromFile()
+	repeat := retry.New(3)
+	return repeat.Run(r.storage.LoadFromFile)
 }
 
 func (r *Repo) Ping() error {
-	return r.storage.Ping()
+	repeat := retry.New(3)
+	return repeat.Run(r.storage.Ping)
 }
 
 func (r *Repo) SetBatch(metrics []metrics.Metrics) error {
-	return r.storage.SetBatch(metrics)
+	repeat := retry.New(3)
+	return repeat.RunMetricsParam(r.storage.SetBatch, metrics)
 }

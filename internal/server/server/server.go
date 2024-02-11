@@ -33,7 +33,7 @@ func (a *Server) Run(ctx context.Context) error {
 	mux.Post("/value/", a.singleMetricJSONHandler)
 	mux.Get("/value/{type}/{name}", a.singleMetricHandler)
 	mux.Post("/update/", a.updateJSONHandler)
-	mux.Post("/updates/", a.updateBatchJSONandler)
+	mux.Post("/updates/", a.updateBatchJSONHandler)
 	mux.Post("/update/{type}/{name}/{value}", a.updateHandler)
 
 	logger.Log.Info("Starting server", zap.String("address", a.config.Host))
