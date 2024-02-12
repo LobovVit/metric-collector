@@ -51,7 +51,7 @@ func (re *Retry) isRetryable(err error) bool {
 	return errors.As(err, &osErr)
 }
 
-func (re *Retry) Run(f func() error) error {
+func (re *Retry) RunNoParam(f func() error) error {
 	var err error
 	for i := re.attemptsLeft; i > 0; i-- {
 		re.addIteration(1)
@@ -69,6 +69,31 @@ func (re *Retry) RunMetricsParam(f func(metrics []metrics.Metrics) error, param 
 	for i := re.attemptsLeft; i > 0; i-- {
 		re.addIteration(1)
 		err = f(param)
+		if !re.isRetryable(err) {
+			return err
+		}
+		re.runTimer()
+	}
+	return err
+}
+
+func (re *Retry) RunKVFloatParam(f func(key string, val float64) error, paramKey string, paramVal float64) error {
+	var err error
+	for i := re.attemptsLeft; i > 0; i-- {
+		re.addIteration(1)
+		err = f(paramKey, paramVal)
+		if !re.isRetryable(err) {
+			return err
+		}
+		re.runTimer()
+	}
+	return err
+}
+func (re *Retry) RunKVIntParam(f func(key string, val int64) error, paramKey string, paramVal int64) error {
+	var err error
+	for i := re.attemptsLeft; i > 0; i-- {
+		re.addIteration(1)
+		err = f(paramKey, paramVal)
 		if !re.isRetryable(err) {
 			return err
 		}

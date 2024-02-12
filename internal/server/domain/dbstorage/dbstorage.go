@@ -90,8 +90,6 @@ func (ms *DBStorage) GetAll() map[string]map[string]string {
 			retGauge[id] = fmt.Sprintf("%g", value)
 		}
 	}
-	logger.Log.Info("cnt", zap.Int("counter", len(retCounter)))
-	logger.Log.Info("cnt", zap.Int("gauge", len(retGauge)))
 	ret["counter"] = retCounter
 	ret["gauge"] = retGauge
 	return ret

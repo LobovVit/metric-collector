@@ -37,17 +37,17 @@ func GetRepo(config *config.Config) Repo {
 
 func (r *Repo) SaveToFile() error {
 	repeat := retry.New(3)
-	return repeat.Run(r.storage.SaveToFile)
+	return repeat.RunNoParam(r.storage.SaveToFile)
 }
 
 func (r *Repo) LoadFromFile() error {
 	repeat := retry.New(3)
-	return repeat.Run(r.storage.LoadFromFile)
+	return repeat.RunNoParam(r.storage.LoadFromFile)
 }
 
 func (r *Repo) Ping() error {
 	repeat := retry.New(3)
-	return repeat.Run(r.storage.Ping)
+	return repeat.RunNoParam(r.storage.Ping)
 }
 
 func (r *Repo) SetBatch(metrics []metrics.Metrics) error {
