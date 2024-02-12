@@ -106,7 +106,7 @@ func (ms *DBStorage) GetSingle(tp string, name string) (string, error) {
 	)
 	err := row.Scan(&id, &mType, &delta, &value)
 	if err != nil {
-		logger.Log.Error("Select single failed", zap.Error(err))
+		logger.Log.Error("Select single failed", zap.String("tp", tp), zap.String("name", name), zap.Error(err))
 		return "", fmt.Errorf("select single failed: %w", err)
 	}
 	switch mType {
