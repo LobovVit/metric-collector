@@ -3,6 +3,7 @@ package memstorage
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"os"
 	"sync"
@@ -107,7 +108,7 @@ func (ms *MemStorage) SaveToFile(ctx context.Context) error {
 
 	tmpfile, err := os.Create(ms.fileStoragePath + "_tmp_")
 	if err != nil {
-		return fmt.Errorf("open tmp file failed: %w", err)
+		return fmt.Errorf("open tmp file: %w", err)
 	}
 	type tmpStorage struct {
 		Gauge   map[string]float64 `json:"gauge"`
@@ -116,20 +117,20 @@ func (ms *MemStorage) SaveToFile(ctx context.Context) error {
 	tmp := tmpStorage{Gauge: ms.Gauge, Counter: ms.Counter}
 	data, err := json.MarshalIndent(tmp, "", "	")
 	if err != nil {
-		return fmt.Errorf("marshal failed: %w", err)
+		return fmt.Errorf("marshal: %w", err)
 	}
 	_, err = tmpfile.Write(data)
 	if err != nil {
-		return fmt.Errorf("write tmp failed: %w", err)
+		return fmt.Errorf("write tmp: %w", err)
 	}
 	err = tmpfile.Close()
 	if err != nil {
-		return fmt.Errorf("close tmp failed: %w", err)
+		return fmt.Errorf("close tmp: %w", err)
 	}
 
 	err = os.Rename(ms.fileStoragePath+"_tmp_", ms.fileStoragePath)
 	if err != nil {
-		return fmt.Errorf("rename file failed: %w", err)
+		return fmt.Errorf("rename file: %w", err)
 	}
 	return nil
 }
@@ -142,7 +143,7 @@ func (ms *MemStorage) LoadFromFile(ctx context.Context) error {
 
 	data, err := os.ReadFile(ms.fileStoragePath)
 	if err != nil {
-		return fmt.Errorf("read file failed: %w", err)
+		return fmt.Errorf("read file: %w", err)
 	}
 	type tmpStorage struct {
 		Gauge   map[string]float64 `json:"gauge"`
@@ -151,7 +152,7 @@ func (ms *MemStorage) LoadFromFile(ctx context.Context) error {
 	tmp := tmpStorage{}
 	err = json.Unmarshal(data, &tmp)
 	if err != nil {
-		return fmt.Errorf("unmarshal failed: %w", err)
+		return fmt.Errorf("unmarshal: %w", err)
 	}
 	if len(tmp.Gauge) > 0 {
 		ms.Gauge = tmp.Gauge
@@ -197,4 +198,15 @@ func (ms *MemStorage) SetBatch(ctx context.Context, metrics []metrics.Metrics) e
 		}
 	}
 	return nil
+}
+
+func (ms *MemStorage) IsRetryable(err error) bool {
+	if err == nil {
+		return false
+	}
+	var osErr *os.SyscallError
+	if errors.As(err, &osErr) {
+		return true
+	}
+	return false
 }

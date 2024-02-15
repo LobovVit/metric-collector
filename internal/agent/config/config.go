@@ -19,7 +19,7 @@ func GetConfig() (*Config, error) {
 	config := &Config{}
 	err := env.Parse(config)
 	if err != nil {
-		return nil, fmt.Errorf("env parse failed: %w", err)
+		return nil, fmt.Errorf("env parse: %w", err)
 	}
 
 	host := flag.String("a", "localhost:8080", "адрес эндпоинта HTTP-сервера")

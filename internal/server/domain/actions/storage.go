@@ -24,6 +24,7 @@ type repository interface {
 	LoadFromFile(ctx context.Context) error
 	Ping(ctx context.Context) error
 	SetBatch(ctx context.Context, metrics []metrics.Metrics) error
+	IsRetryable(err error) bool
 }
 
 func GetRepo(ctx context.Context, config *config.Config) (Repo, error) {
@@ -50,7 +51,7 @@ func (r *Repo) SaveToFile(ctx context.Context) error {
 	try := retry.New(3)
 	for {
 		err = r.storage.SaveToFile(ctx)
-		if err == nil || try.Run() {
+		if err == nil || try.Run() || !r.storage.IsRetryable(err) {
 			break
 		}
 	}
@@ -62,7 +63,7 @@ func (r *Repo) LoadFromFile(ctx context.Context) error {
 	try := retry.New(3)
 	for {
 		err = r.storage.LoadFromFile(ctx)
-		if err == nil || try.Run() {
+		if err == nil || try.Run() || !r.storage.IsRetryable(err) {
 			break
 		}
 	}
@@ -74,7 +75,7 @@ func (r *Repo) Ping(ctx context.Context) error {
 	try := retry.New(3)
 	for {
 		err = r.storage.Ping(ctx)
-		if err == nil || try.Run() {
+		if err == nil || try.Run() || !r.storage.IsRetryable(err) {
 			break
 		}
 	}
@@ -86,7 +87,7 @@ func (r *Repo) SetBatch(ctx context.Context, metrics []metrics.Metrics) error {
 	try := retry.New(3)
 	for {
 		err = r.storage.SetBatch(ctx, metrics)
-		if err == nil || try.Run() {
+		if err == nil || try.Run() || !r.storage.IsRetryable(err) {
 			break
 		}
 	}

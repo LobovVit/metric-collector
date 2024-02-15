@@ -95,7 +95,7 @@ func (a *Agent) sendRequestText(ctx context.Context, metrics *metrics.Metrics) e
 			SetHeader("Content-Type", "text/plain").
 			Post(fmt.Sprintf("%v%v/%v/%v", a.cfg.Host, v.MType, v.ID, val))
 		if err != nil {
-			return fmt.Errorf("send request failed: %w", err)
+			return fmt.Errorf("send request: %w", err)
 		}
 	}
 	return nil
@@ -105,11 +105,11 @@ func (a *Agent) sendRequestJSON(ctx context.Context, metrics *metrics.Metrics) e
 	for _, v := range metrics.Metrics {
 		metric, err := json.Marshal(v)
 		if err != nil {
-			return fmt.Errorf("marshal json failed: %w", err)
+			return fmt.Errorf("marshal json: %w", err)
 		}
 		metric, err = compress.Compress(metric)
 		if err != nil {
-			return fmt.Errorf("compress json failed: %w", err)
+			return fmt.Errorf("compress json: %w", err)
 		}
 		_, err = a.client.R().
 			SetContext(ctx).
@@ -119,7 +119,7 @@ func (a *Agent) sendRequestJSON(ctx context.Context, metrics *metrics.Metrics) e
 			Post(a.cfg.Host)
 
 		if err != nil {
-			return fmt.Errorf("send request json failed: %w", err)
+			return fmt.Errorf("send request json: %w", err)
 		}
 	}
 	return nil
@@ -128,11 +128,11 @@ func (a *Agent) sendRequestJSON(ctx context.Context, metrics *metrics.Metrics) e
 func (a *Agent) sendRequestBatchJSON(ctx context.Context, metrics *metrics.Metrics) error {
 	data, err := json.Marshal(metrics.Metrics)
 	if err != nil {
-		return fmt.Errorf("marshal json failed: %w", err)
+		return fmt.Errorf("marshal json: %w", err)
 	}
 	data, err = compress.Compress(data)
 	if err != nil {
-		return fmt.Errorf("compress json failed: %w", err)
+		return fmt.Errorf("compress json: %w", err)
 	}
 	_, err = a.client.R().
 		SetContext(ctx).
@@ -142,7 +142,7 @@ func (a *Agent) sendRequestBatchJSON(ctx context.Context, metrics *metrics.Metri
 		Post(a.cfg.Host)
 
 	if err != nil {
-		return fmt.Errorf("send request json failed: %w", err)
+		return fmt.Errorf("send request json: %w", err)
 	}
 	return nil
 }

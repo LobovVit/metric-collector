@@ -20,10 +20,10 @@ func main() {
 func run() error {
 	cfg, err := config.GetConfig()
 	if err != nil {
-		return fmt.Errorf("get config failed: %w", err)
+		return fmt.Errorf("get config: %w", err)
 	}
 	if err = logger.Initialize(cfg.LogLevel); err != nil {
-		return fmt.Errorf("log initialize failed: %w", err)
+		return fmt.Errorf("log initialize: %w", err)
 	}
 	ctx, cancel := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGHUP, syscall.SIGTERM, syscall.SIGABRT)
 	defer cancel()
