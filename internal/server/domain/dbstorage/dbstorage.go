@@ -170,8 +170,5 @@ func (ms *DBStorage) IsRetryable(err error) bool {
 		return false
 	}
 	var pgErr *pgconn.PgError
-	if errors.As(err, &pgErr) && pgerrcode.IsConnectionException(pgErr.Code) {
-		return true
-	}
-	return false
+	return errors.As(err, &pgErr) && pgerrcode.IsConnectionException(pgErr.Code)
 }

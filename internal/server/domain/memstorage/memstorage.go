@@ -205,8 +205,5 @@ func (ms *MemStorage) IsRetryable(err error) bool {
 		return false
 	}
 	var osErr *os.SyscallError
-	if errors.As(err, &osErr) {
-		return true
-	}
-	return false
+	return errors.As(err, &osErr)
 }
