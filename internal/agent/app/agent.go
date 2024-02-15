@@ -11,6 +11,7 @@ import (
 	"github.com/LobovVit/metric-collector/internal/agent/config"
 	"github.com/LobovVit/metric-collector/internal/agent/metrics"
 	"github.com/LobovVit/metric-collector/pkg/logger"
+	"github.com/LobovVit/metric-collector/pkg/retry"
 	"github.com/go-resty/resty/v2"
 	"go.uber.org/zap"
 )
@@ -42,7 +43,7 @@ func (a *Agent) Run(ctx context.Context) error {
 		case <-sendTicker.C:
 			tmp := m.CounterExecMemStats
 			m.CounterExecMemStats = 0
-			err := a.sendRequest(ctx, m)
+			err := a.sendRequestWithRetry(ctx, m)
 			if err != nil {
 				m.CounterExecMemStats = tmp
 				logger.Log.Error("Send request failed", zap.Error(err))
@@ -55,27 +56,29 @@ func (a *Agent) Run(ctx context.Context) error {
 	}
 }
 
-func (a *Agent) sendRequest(ctx context.Context, metrics *metrics.Metrics) error {
-	var ret error
-	for sendCounter := 1; sendCounter <= 5; sendCounter = sendCounter + 2 {
-		switch a.cfg.ReportFormat {
-		case "json":
-			ret = a.sendRequestJSON(ctx, metrics)
-		case "text":
-			ret = a.sendRequestText(ctx, metrics)
-		case "batch":
-			ret = a.sendRequestBatchJSON(ctx, metrics)
-		default:
-			return fmt.Errorf("incorrect format")
-		}
-		if ret != nil {
-			time.Sleep(time.Second * time.Duration(sendCounter))
-			logger.Log.Info("Retry", zap.Int("sendCounter", sendCounter))
-		} else {
+func (a *Agent) sendRequestWithRetry(ctx context.Context, metrics *metrics.Metrics) error {
+	var err error
+	try := retry.New(3)
+	for {
+		err = a.sendRequest(ctx, metrics)
+		if err == nil || try.Run() {
 			break
 		}
 	}
-	return ret
+	return err
+}
+
+func (a *Agent) sendRequest(ctx context.Context, metrics *metrics.Metrics) error {
+	switch a.cfg.ReportFormat {
+	case "json":
+		return a.sendRequestJSON(ctx, metrics)
+	case "text":
+		return a.sendRequestText(ctx, metrics)
+	case "batch":
+		return a.sendRequestBatchJSON(ctx, metrics)
+	default:
+		return fmt.Errorf("incorrect format")
+	}
 }
 
 func (a *Agent) sendRequestText(ctx context.Context, metrics *metrics.Metrics) error {

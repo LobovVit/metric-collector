@@ -27,6 +27,9 @@ func run() error {
 	}
 	ctx, cancel := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGHUP, syscall.SIGTERM, syscall.SIGABRT)
 	defer cancel()
-	app := server.New(cfg)
+	app, err := server.New(ctx, cfg)
+	if err != nil {
+		return err
+	}
 	return app.Run(ctx)
 }

@@ -1,11 +1,13 @@
 package actions
 
 import (
+	"context"
+
 	"github.com/LobovVit/metric-collector/internal/server/config"
 	"github.com/LobovVit/metric-collector/internal/server/domain/dbstorage"
 	"github.com/LobovVit/metric-collector/internal/server/domain/memstorage"
 	"github.com/LobovVit/metric-collector/internal/server/domain/metrics"
-	"github.com/LobovVit/metric-collector/internal/server/domain/retry"
+	"github.com/LobovVit/metric-collector/pkg/retry"
 )
 
 type Repo struct {
@@ -14,43 +16,79 @@ type Repo struct {
 }
 
 type repository interface {
-	SetGauge(key string, val float64) error
-	SetCounter(key string, val int64) error
-	GetAll() map[string]map[string]string
-	GetSingle(tp string, name string) (string, error)
-	SaveToFile() error
-	LoadFromFile() error
-	Ping() error
-	SetBatch(metrics []metrics.Metrics) error
+	SetGauge(ctx context.Context, key string, val float64) error
+	SetCounter(ctx context.Context, key string, val int64) error
+	GetAll(ctx context.Context) (map[string]map[string]string, error)
+	GetSingle(ctx context.Context, tp string, name string) (string, error)
+	SaveToFile(ctx context.Context) error
+	LoadFromFile(ctx context.Context) error
+	Ping(ctx context.Context) error
+	SetBatch(ctx context.Context, metrics []metrics.Metrics) error
 }
 
-func GetRepo(config *config.Config) Repo {
+func GetRepo(ctx context.Context, config *config.Config) (Repo, error) {
 	if config.DSN == "" {
 		nImmSave := false
 		if config.StoreInterval == 0 {
 			nImmSave = true
 		}
-		return Repo{storage: memstorage.NewStorage(config.Restore, config.StoreInterval, config.FileStoragePath), needImmediatelySave: nImmSave}
+		storage, err := memstorage.NewStorage(ctx, config.Restore, config.StoreInterval, config.FileStoragePath)
+		if err != nil {
+			return Repo{}, err
+		}
+		return Repo{storage: storage, needImmediatelySave: nImmSave}, nil
 	}
-	return Repo{storage: dbstorage.NewStorage(config.DSN)}
+	storage, err := dbstorage.NewStorage(ctx, config.DSN)
+	if err != nil {
+		return Repo{}, err
+	}
+	return Repo{storage: storage}, nil
 }
 
-func (r *Repo) SaveToFile() error {
-	repeat := retry.New(3)
-	return repeat.RunNoParam(r.storage.SaveToFile)
+func (r *Repo) SaveToFile(ctx context.Context) error {
+	var err error
+	try := retry.New(3)
+	for {
+		err = r.storage.SaveToFile(ctx)
+		if err == nil || try.Run() {
+			break
+		}
+	}
+	return err
 }
 
-func (r *Repo) LoadFromFile() error {
-	repeat := retry.New(3)
-	return repeat.RunNoParam(r.storage.LoadFromFile)
+func (r *Repo) LoadFromFile(ctx context.Context) error {
+	var err error
+	try := retry.New(3)
+	for {
+		err = r.storage.LoadFromFile(ctx)
+		if err == nil || try.Run() {
+			break
+		}
+	}
+	return err
 }
 
-func (r *Repo) Ping() error {
-	repeat := retry.New(3)
-	return repeat.RunNoParam(r.storage.Ping)
+func (r *Repo) Ping(ctx context.Context) error {
+	var err error
+	try := retry.New(3)
+	for {
+		err = r.storage.Ping(ctx)
+		if err == nil || try.Run() {
+			break
+		}
+	}
+	return err
 }
 
-func (r *Repo) SetBatch(metrics []metrics.Metrics) error {
-	repeat := retry.New(3)
-	return repeat.RunMetricsParam(r.storage.SetBatch, metrics)
+func (r *Repo) SetBatch(ctx context.Context, metrics []metrics.Metrics) error {
+	var err error
+	try := retry.New(3)
+	for {
+		err = r.storage.SetBatch(ctx, metrics)
+		if err == nil || try.Run() {
+			break
+		}
+	}
+	return err
 }

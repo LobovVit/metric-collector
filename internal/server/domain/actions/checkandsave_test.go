@@ -1,6 +1,7 @@
 package actions
 
 import (
+	"context"
 	"testing"
 
 	"github.com/LobovVit/metric-collector/internal/server/config"
@@ -98,8 +99,8 @@ func TestCheckAndSave(t *testing.T) {
 	cfg, _ := config.GetConfig()
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			x := GetRepo(cfg)
-			assert.NoError(t, x.CheckAndSaveText(tt.tp, tt.code, tt.val))
+			x, _ := GetRepo(context.Background(), cfg)
+			assert.NoError(t, x.CheckAndSaveText(context.Background(), tt.tp, tt.code, tt.val))
 		})
 	}
 }

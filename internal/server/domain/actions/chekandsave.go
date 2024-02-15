@@ -1,12 +1,13 @@
 package actions
 
 import (
+	"context"
 	"fmt"
 	"strconv"
 
 	"github.com/LobovVit/metric-collector/internal/server/domain/metrics"
-	"github.com/LobovVit/metric-collector/internal/server/domain/retry"
 	"github.com/LobovVit/metric-collector/pkg/logger"
+	"github.com/LobovVit/metric-collector/pkg/retry"
 	"go.uber.org/zap"
 )
 
@@ -19,27 +20,37 @@ func (e badRequestErr) Error() string {
 	return fmt.Sprintf("bad request metric type:\"%v\" with value:\"%v\"", e.tp, e.value)
 }
 
-func (r *Repo) CheckAndSaveText(tp string, name string, value string) error {
+func (r *Repo) CheckAndSaveText(ctx context.Context, tp string, name string, value string) error {
 	var ret error
-	repeat := retry.New(3)
+	try := retry.New(3)
 	switch tp {
 	case "gauge":
 		v, err := strconv.ParseFloat(value, 64)
 		if err != nil {
 			return badRequestErr{tp, value}
 		}
-		ret = repeat.RunKVFloatParam(r.storage.SetGauge, name, v)
+		for {
+			ret = r.storage.SetGauge(ctx, name, v)
+			if ret == nil || try.Run() {
+				break
+			}
+		}
 	case "counter":
 		v, err := strconv.ParseInt(value, 10, 64)
 		if err != nil {
 			return badRequestErr{tp, value}
 		}
-		ret = repeat.RunKVIntParam(r.storage.SetCounter, name, v)
+		for {
+			ret = r.storage.SetCounter(ctx, name, v)
+			if ret == nil || try.Run() {
+				break
+			}
+		}
 	default:
 		return badRequestErr{tp, value}
 	}
 	if r.needImmediatelySave {
-		err := r.SaveToFile()
+		err := r.SaveToFile(ctx)
 		if err != nil {
 			logger.Log.Error("Immediately save failed", zap.Error(err))
 		}
@@ -47,21 +58,31 @@ func (r *Repo) CheckAndSaveText(tp string, name string, value string) error {
 	return ret
 }
 
-func (r *Repo) CheckAndSaveStruct(metrics metrics.Metrics) (metrics.Metrics, error) {
+func (r *Repo) CheckAndSaveStruct(ctx context.Context, metrics metrics.Metrics) (metrics.Metrics, error) {
 	var ret error
-	repeat := retry.New(3)
+	try := retry.New(3)
 	switch metrics.MType {
 	case "gauge":
-		ret = repeat.RunKVFloatParam(r.storage.SetGauge, metrics.ID, *metrics.Value)
+		for {
+			ret = r.storage.SetGauge(ctx, metrics.ID, *metrics.Value)
+			if ret == nil || try.Run() {
+				break
+			}
+		}
 	case "counter":
-		ret = repeat.RunKVIntParam(r.storage.SetCounter, metrics.ID, *metrics.Delta)
-		tmp, _ := r.storage.GetSingle(metrics.MType, metrics.ID)
+		for {
+			ret = r.storage.SetCounter(ctx, metrics.ID, *metrics.Delta)
+			if ret == nil || try.Run() {
+				break
+			}
+		}
+		tmp, _ := r.storage.GetSingle(ctx, metrics.MType, metrics.ID)
 		*metrics.Delta, _ = strconv.ParseInt(tmp, 10, 64)
 	default:
 		return metrics, badRequestErr{metrics.MType, metrics.ID}
 	}
 	if r.needImmediatelySave {
-		err := r.SaveToFile()
+		err := r.SaveToFile(ctx)
 		if err != nil {
 			logger.Log.Error("Immediately save failed", zap.Error(err))
 		}
@@ -69,11 +90,17 @@ func (r *Repo) CheckAndSaveStruct(metrics metrics.Metrics) (metrics.Metrics, err
 	return metrics, ret
 }
 
-func (r *Repo) CheckAndSaveBatch(metrics []metrics.Metrics) ([]metrics.Metrics, error) {
-	repeat := retry.New(3)
-	ret := repeat.RunMetricsParam(r.storage.SetBatch, metrics)
+func (r *Repo) CheckAndSaveBatch(ctx context.Context, metrics []metrics.Metrics) ([]metrics.Metrics, error) {
+	try := retry.New(3)
+	var ret error
+	for {
+		ret = r.storage.SetBatch(ctx, metrics)
+		if ret == nil || try.Run() {
+			break
+		}
+	}
 	if r.needImmediatelySave {
-		err := r.SaveToFile()
+		err := r.SaveToFile(ctx)
 		if err != nil {
 			logger.Log.Error("Immediately save failed", zap.Error(err))
 		}

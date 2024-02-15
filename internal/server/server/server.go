@@ -18,16 +18,18 @@ type Server struct {
 	storage actions.Repo
 }
 
-func New(config *config.Config) *Server {
-	repo := actions.GetRepo(config)
-	return &Server{config: config, storage: repo}
+func New(ctx context.Context, config *config.Config) (*Server, error) {
+	repo, err := actions.GetRepo(ctx, config)
+	if err != nil {
+		return nil, err
+	}
+	return &Server{config: config, storage: repo}, nil
 }
 
 func (a *Server) Run(ctx context.Context) error {
 
 	mux := chi.NewRouter()
-	mux.Use(middleware.WithLogging)
-	mux.Use(middleware.WithCompress)
+	mux.Use(middleware.WithLogging, middleware.WithCompress)
 	mux.Get("/", a.allMetricsHandler)
 	mux.Get("/ping", a.dbPingHandler)
 	mux.Post("/value/", a.singleMetricJSONHandler)
@@ -49,18 +51,18 @@ func (a *Server) Run(ctx context.Context) error {
 	})
 	g.Go(func() error {
 		<-ctx.Done()
-		return httpServer.Shutdown(context.Background())
+		return httpServer.Shutdown(ctx)
 	})
 
 	if err := g.Wait(); err != nil {
 		logger.Log.Info("Shutdown", zap.Error(err))
-		a.RouterShutdown()
+		a.RouterShutdown(ctx)
 	}
 	return nil
 }
 
-func (a *Server) RouterShutdown() {
-	err := a.storage.SaveToFile()
+func (a *Server) RouterShutdown(ctx context.Context) {
+	err := a.storage.SaveToFile(ctx)
 	if err != nil {
 		logger.Log.Error("Save to file failed", zap.Error(err))
 	}

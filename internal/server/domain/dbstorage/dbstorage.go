@@ -1,6 +1,7 @@
 package dbstorage
 
 import (
+	"context"
 	"database/sql"
 	"fmt"
 
@@ -23,21 +24,23 @@ type DBStorage struct {
 	dbConnections *sql.DB
 }
 
-func NewStorage(dsn string) *DBStorage {
+func NewStorage(ctx context.Context, dsn string) (*DBStorage, error) {
 	dbCon, err := postgresql.NweConn(dsn)
 	if err != nil {
 		logger.Log.Error("Get db connection failed", zap.Error(err))
+		return nil, err
 	}
 	s := &DBStorage{dbConnections: dbCon}
 	createSQL := `create table IF NOT EXISTS metrics (ID text PRIMARY KEY,MType text, Delta bigint, Value double precision)`
 	_, err = s.dbConnections.Exec(createSQL)
 	if err != nil {
 		logger.Log.Error("Create table failed", zap.Error(err))
+		return nil, err
 	}
-	return s
+	return s, nil
 }
 
-func (ms *DBStorage) SetGauge(key string, val float64) error {
+func (ms *DBStorage) SetGauge(ctx context.Context, key string, val float64) error {
 	upsertSQL := `INSERT INTO metrics (id, MType, Value) VALUES ($1, 'gauge', $2) ON CONFLICT(id) DO UPDATE set Value = EXCLUDED.Value`
 	_, err := ms.dbConnections.Exec(upsertSQL, key, val)
 	if err != nil {
@@ -47,7 +50,7 @@ func (ms *DBStorage) SetGauge(key string, val float64) error {
 	return nil
 }
 
-func (ms *DBStorage) SetCounter(key string, val int64) error {
+func (ms *DBStorage) SetCounter(ctx context.Context, key string, val int64) error {
 	upsertSQL := `INSERT INTO metrics AS a (id, MType, Delta) VALUES ($1, 'counter', $2) ON CONFLICT(id) DO UPDATE set Delta = a.Delta + EXCLUDED.Delta`
 	_, err := ms.dbConnections.Exec(upsertSQL, key, val)
 	if err != nil {
@@ -57,7 +60,7 @@ func (ms *DBStorage) SetCounter(key string, val int64) error {
 	return nil
 }
 
-func (ms *DBStorage) GetAll() map[string]map[string]string {
+func (ms *DBStorage) GetAll(ctx context.Context) (map[string]map[string]string, error) {
 	ret := make(map[string]map[string]string, 2)
 	retGauge := make(map[string]string)
 	retCounter := make(map[string]string)
@@ -66,11 +69,11 @@ func (ms *DBStorage) GetAll() map[string]map[string]string {
 	rows, err := ms.dbConnections.Query(selectSQL)
 	if err != nil {
 		logger.Log.Error("Select all failed", zap.Error(err))
-		return ret
+		return ret, err
 	}
 	if err = rows.Err(); err != nil {
 		logger.Log.Error("Select all failed", zap.Error(err))
-		return ret
+		return ret, err
 	}
 	defer rows.Close()
 	var (
@@ -82,6 +85,7 @@ func (ms *DBStorage) GetAll() map[string]map[string]string {
 		err = rows.Scan(&id, &mType, &delta, &value)
 		if err != nil {
 			logger.Log.Error("Select rows failed", zap.Error(err))
+			return ret, nil
 		}
 		if mType == "counter" {
 			retCounter[id] = fmt.Sprintf("%d", delta)
@@ -92,10 +96,10 @@ func (ms *DBStorage) GetAll() map[string]map[string]string {
 	}
 	ret["counter"] = retCounter
 	ret["gauge"] = retGauge
-	return ret
+	return ret, nil
 }
 
-func (ms *DBStorage) GetSingle(tp string, name string) (string, error) {
+func (ms *DBStorage) GetSingle(ctx context.Context, tp string, name string) (string, error) {
 
 	selectSQL := `select id, MType, coalesce(Delta,-1), coalesce(Value,-1) from metrics where MType = $1 and id = $2`
 	row := ms.dbConnections.QueryRow(selectSQL, tp, name)
@@ -118,18 +122,18 @@ func (ms *DBStorage) GetSingle(tp string, name string) (string, error) {
 	return "", notFoundMetricError{tp, name}
 }
 
-func (ms *DBStorage) LoadFromFile() error {
+func (ms *DBStorage) LoadFromFile(ctx context.Context) error {
 	return nil
 }
 
-func (ms *DBStorage) SaveToFile() error {
+func (ms *DBStorage) SaveToFile(ctx context.Context) error {
 	return nil
 }
 
-func (ms *DBStorage) Ping() error {
+func (ms *DBStorage) Ping(ctx context.Context) error {
 	return ms.dbConnections.Ping()
 }
-func (ms *DBStorage) SetBatch(metrics []metrics.Metrics) error {
+func (ms *DBStorage) SetBatch(ctx context.Context, metrics []metrics.Metrics) error {
 	tx, err := ms.dbConnections.Begin()
 	if err != nil {
 		return fmt.Errorf("open transaction failed: %w", err)

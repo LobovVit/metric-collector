@@ -1,6 +1,7 @@
 package memstorage
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"os"
@@ -30,33 +31,33 @@ type MemStorage struct {
 	fileStoragePath string
 }
 
-func NewStorage(needRestore bool, storeInterval int, fileStoragePath string) *MemStorage {
+func NewStorage(ctx context.Context, needRestore bool, storeInterval int, fileStoragePath string) (*MemStorage, error) {
 	s := &MemStorage{Gauge: make(map[string]float64), Counter: make(map[string]int64), storeInterval: storeInterval, fileStoragePath: fileStoragePath}
 	if needRestore {
-		err := s.LoadFromFile()
+		err := s.LoadFromFile(ctx)
 		if err != nil {
 			logger.Log.Error("Load from file failed", zap.Error(err))
 		}
 	}
-	s.StartPeriodicSave()
-	return s
+	s.StartPeriodicSave(ctx)
+	return s, nil
 }
 
-func (ms *MemStorage) SetGauge(key string, val float64) error {
+func (ms *MemStorage) SetGauge(ctx context.Context, key string, val float64) error {
 	ms.rwGaugeMutex.Lock()
 	defer ms.rwGaugeMutex.Unlock()
 	ms.Gauge[key] = val
 	return nil
 }
 
-func (ms *MemStorage) SetCounter(key string, val int64) error {
+func (ms *MemStorage) SetCounter(ctx context.Context, key string, val int64) error {
 	ms.rwCounterMutex.Lock()
 	defer ms.rwCounterMutex.Unlock()
 	ms.Counter[key] += val
 	return nil
 }
 
-func (ms *MemStorage) GetAll() map[string]map[string]string {
+func (ms *MemStorage) GetAll(ctx context.Context) (map[string]map[string]string, error) {
 	ms.rwCounterMutex.RLock()
 	defer ms.rwCounterMutex.RUnlock()
 	ms.rwGaugeMutex.RLock()
@@ -73,10 +74,10 @@ func (ms *MemStorage) GetAll() map[string]map[string]string {
 	ret := make(map[string]map[string]string, 2)
 	ret["counter"] = retCounter
 	ret["gauge"] = retGauge
-	return ret
+	return ret, nil
 }
 
-func (ms *MemStorage) GetSingle(tp string, name string) (string, error) {
+func (ms *MemStorage) GetSingle(ctx context.Context, tp string, name string) (string, error) {
 	switch tp {
 	case "gauge":
 		ms.rwGaugeMutex.RLock()
@@ -98,7 +99,7 @@ func (ms *MemStorage) GetSingle(tp string, name string) (string, error) {
 	return "", notFoundMetricError{tp, name}
 }
 
-func (ms *MemStorage) SaveToFile() error {
+func (ms *MemStorage) SaveToFile(ctx context.Context) error {
 	ms.rwCounterMutex.RLock()
 	defer ms.rwCounterMutex.RUnlock()
 	ms.rwGaugeMutex.RLock()
@@ -133,7 +134,7 @@ func (ms *MemStorage) SaveToFile() error {
 	return nil
 }
 
-func (ms *MemStorage) LoadFromFile() error {
+func (ms *MemStorage) LoadFromFile(ctx context.Context) error {
 	ms.rwCounterMutex.RLock()
 	defer ms.rwCounterMutex.RUnlock()
 	ms.rwGaugeMutex.RLock()
@@ -161,7 +162,7 @@ func (ms *MemStorage) LoadFromFile() error {
 	return nil
 }
 
-func (ms *MemStorage) StartPeriodicSave() {
+func (ms *MemStorage) StartPeriodicSave(ctx context.Context) {
 	if ms.storeInterval == 0 {
 		return
 	}
@@ -169,7 +170,7 @@ func (ms *MemStorage) StartPeriodicSave() {
 	go func() {
 		for {
 			<-saveTicker.C
-			err := ms.SaveToFile()
+			err := ms.SaveToFile(ctx)
 			if err != nil {
 				logger.Log.Error("Periodic save failed", zap.Error(err))
 			}
@@ -177,11 +178,11 @@ func (ms *MemStorage) StartPeriodicSave() {
 	}()
 }
 
-func (ms *MemStorage) Ping() error {
+func (ms *MemStorage) Ping(ctx context.Context) error {
 	return fmt.Errorf("no db")
 }
 
-func (ms *MemStorage) SetBatch(metrics []metrics.Metrics) error {
+func (ms *MemStorage) SetBatch(ctx context.Context, metrics []metrics.Metrics) error {
 	ms.rwCounterMutex.RLock()
 	defer ms.rwCounterMutex.RUnlock()
 	ms.rwGaugeMutex.RLock()

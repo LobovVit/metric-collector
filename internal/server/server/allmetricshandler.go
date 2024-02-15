@@ -9,7 +9,7 @@ import (
 
 func (a *Server) allMetricsHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "text/html")
-	res, err := a.storage.GetAll()
+	res, err := a.storage.GetAll(r.Context())
 	if err != nil {
 		w.WriteHeader(http.StatusNotFound)
 		return

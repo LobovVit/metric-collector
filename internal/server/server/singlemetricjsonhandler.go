@@ -21,7 +21,7 @@ func (a *Server) singleMetricJSONHandler(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	res, err := a.storage.GetSingleValStruct(metric)
+	res, err := a.storage.GetSingleValStruct(r.Context(), metric)
 	if err != nil {
 		w.WriteHeader(http.StatusNotFound)
 		w.Write([]byte(err.Error()))

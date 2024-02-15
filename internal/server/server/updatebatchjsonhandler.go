@@ -23,7 +23,7 @@ func (a *Server) updateBatchJSONHandler(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	metricsBatch, err = a.storage.CheckAndSaveBatch(metricsBatch)
+	metricsBatch, err = a.storage.CheckAndSaveBatch(r.Context(), metricsBatch)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 	}

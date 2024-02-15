@@ -2,8 +2,10 @@ package logger
 
 import (
 	"fmt"
+	"time"
 
 	"go.uber.org/zap"
+	"go.uber.org/zap/zapcore"
 )
 
 var Log *zap.Logger = zap.NewNop()
@@ -15,6 +17,7 @@ func Initialize(level string) error {
 	}
 
 	cfg := zap.NewProductionConfig()
+	cfg.EncoderConfig.EncodeTime = zapcore.TimeEncoderOfLayout(time.RFC3339)
 
 	cfg.Level = lvl
 
