@@ -11,6 +11,7 @@ import (
 	"github.com/LobovVit/metric-collector/internal/agent/config"
 	"github.com/LobovVit/metric-collector/internal/agent/metrics"
 	"github.com/LobovVit/metric-collector/pkg/logger"
+	"github.com/LobovVit/metric-collector/pkg/retry"
 	"github.com/go-resty/resty/v2"
 	"go.uber.org/zap"
 )
@@ -42,7 +43,7 @@ func (a *Agent) Run(ctx context.Context) error {
 		case <-sendTicker.C:
 			tmp := m.CounterExecMemStats
 			m.CounterExecMemStats = 0
-			err := a.sendRequest(ctx, m)
+			err := a.sendRequestWithRetry(ctx, m)
 			if err != nil {
 				m.CounterExecMemStats = tmp
 				logger.Log.Error("Send request failed", zap.Error(err))
@@ -55,12 +56,26 @@ func (a *Agent) Run(ctx context.Context) error {
 	}
 }
 
+func (a *Agent) sendRequestWithRetry(ctx context.Context, metrics *metrics.Metrics) error {
+	var err error
+	try := retry.New(3)
+	for {
+		err = a.sendRequest(ctx, metrics)
+		if err == nil || try.Run() {
+			break
+		}
+	}
+	return err
+}
+
 func (a *Agent) sendRequest(ctx context.Context, metrics *metrics.Metrics) error {
 	switch a.cfg.ReportFormat {
 	case "json":
 		return a.sendRequestJSON(ctx, metrics)
 	case "text":
 		return a.sendRequestText(ctx, metrics)
+	case "batch":
+		return a.sendRequestBatchJSON(ctx, metrics)
 	default:
 		return fmt.Errorf("incorrect format")
 	}
@@ -80,7 +95,7 @@ func (a *Agent) sendRequestText(ctx context.Context, metrics *metrics.Metrics) e
 			SetHeader("Content-Type", "text/plain").
 			Post(fmt.Sprintf("%v%v/%v/%v", a.cfg.Host, v.MType, v.ID, val))
 		if err != nil {
-			return fmt.Errorf("send request failed: %w", err)
+			return fmt.Errorf("send request: %w", err)
 		}
 	}
 	return nil
@@ -90,11 +105,11 @@ func (a *Agent) sendRequestJSON(ctx context.Context, metrics *metrics.Metrics) e
 	for _, v := range metrics.Metrics {
 		metric, err := json.Marshal(v)
 		if err != nil {
-			return fmt.Errorf("marshal json failed: %w", err)
+			return fmt.Errorf("marshal json: %w", err)
 		}
 		metric, err = compress.Compress(metric)
 		if err != nil {
-			return fmt.Errorf("compress json failed: %w", err)
+			return fmt.Errorf("compress json: %w", err)
 		}
 		_, err = a.client.R().
 			SetContext(ctx).
@@ -104,8 +119,30 @@ func (a *Agent) sendRequestJSON(ctx context.Context, metrics *metrics.Metrics) e
 			Post(a.cfg.Host)
 
 		if err != nil {
-			return fmt.Errorf("send request json failed: %w", err)
+			return fmt.Errorf("send request json: %w", err)
 		}
+	}
+	return nil
+}
+
+func (a *Agent) sendRequestBatchJSON(ctx context.Context, metrics *metrics.Metrics) error {
+	data, err := json.Marshal(metrics.Metrics)
+	if err != nil {
+		return fmt.Errorf("marshal json: %w", err)
+	}
+	data, err = compress.Compress(data)
+	if err != nil {
+		return fmt.Errorf("compress json: %w", err)
+	}
+	_, err = a.client.R().
+		SetContext(ctx).
+		SetHeader("Content-Type", "application/json").
+		SetHeader("Content-Encoding", "gzip").
+		SetBody(data).
+		Post(a.cfg.Host)
+
+	if err != nil {
+		return fmt.Errorf("send request json: %w", err)
 	}
 	return nil
 }

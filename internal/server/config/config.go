@@ -14,13 +14,14 @@ type Config struct {
 	StoreInterval   int    `env:"STORE_INTERVAL"`
 	FileStoragePath string `env:"FILE_STORAGE_PATH"`
 	Restore         bool   `env:"RESTORE"`
+	DSN             string `env:"DATABASE_DSN"`
 }
 
 func GetConfig() (*Config, error) {
 	config := &Config{}
 	err := env.Parse(config)
 	if err != nil {
-		return nil, fmt.Errorf("env parse failed: %w", err)
+		return nil, fmt.Errorf("env parse: %w", err)
 	}
 
 	host := flag.String("a", "localhost:8080", "адрес эндпоинта HTTP-сервера")
@@ -28,6 +29,7 @@ func GetConfig() (*Config, error) {
 	storeInterval := flag.Int("i", 30, "интервал сохранения на диск")
 	fileStoragePath := flag.String("f", "/tmp/metrics-db.json", "файл для сохранения на диск")
 	restore := flag.Bool("r", true, "загружать при старте данные из файла")
+	dsn := flag.String("d", "", "строка подключения к БД") //postgresql://postgres:password@10.66.66.3:5432/postgres?sslmode=disable
 	flag.Parse()
 
 	if config.Host == "" {
@@ -50,6 +52,10 @@ func GetConfig() (*Config, error) {
 	_, exists = os.LookupEnv("RESTORE")
 	if !exists {
 		config.Restore = *restore
+	}
+
+	if config.DSN == "" {
+		config.DSN = *dsn
 	}
 
 	return config, nil

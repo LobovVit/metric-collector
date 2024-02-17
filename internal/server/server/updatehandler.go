@@ -11,7 +11,7 @@ func (a *Server) updateHandler(w http.ResponseWriter, r *http.Request) {
 	name := chi.URLParam(r, "name")
 	value := chi.URLParam(r, "value")
 	w.Header().Set("Content-Type", "text/plain")
-	err := a.storage.CheckAndSaveText(tp, name, value)
+	err := a.storage.CheckAndSaveText(r.Context(), tp, name, value)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 	} else {

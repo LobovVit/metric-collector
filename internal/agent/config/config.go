@@ -19,21 +19,27 @@ func GetConfig() (*Config, error) {
 	config := &Config{}
 	err := env.Parse(config)
 	if err != nil {
-		return nil, fmt.Errorf("env parse failed: %w", err)
+		return nil, fmt.Errorf("env parse: %w", err)
 	}
 
 	host := flag.String("a", "localhost:8080", "адрес эндпоинта HTTP-сервера")
 	reportInterval := flag.Int64("r", 10, "частота отправки метрик на сервер")
 	pollInterval := flag.Int64("p", 2, "частота опроса метрик из пакета runtime")
 	logLevel := flag.String("l", "info", "log level")
-	reportFormat := flag.String("f", "json", "формат передачи метрик json/text")
+	reportFormat := flag.String("f", "batch", "формат передачи метрик json/text/batch")
 	flag.Parse()
 
+	if config.ReportFormat == "" {
+		config.ReportFormat = *reportFormat
+	}
 	if config.Host == "" {
 		config.Host = *host
 	}
-	if config.Host != "" {
+	if config.Host != "" && config.ReportFormat != "batch" {
 		config.Host = "http://" + config.Host + "/update/"
+	}
+	if config.Host != "" && config.ReportFormat == "batch" {
+		config.Host = "http://" + config.Host + "/updates/"
 	}
 	if config.ReportInterval == 0 {
 		config.ReportInterval = *reportInterval
@@ -44,8 +50,6 @@ func GetConfig() (*Config, error) {
 	if config.LogLevel == "" {
 		config.LogLevel = *logLevel
 	}
-	if config.ReportFormat == "" {
-		config.ReportFormat = *reportFormat
-	}
+
 	return config, nil
 }
