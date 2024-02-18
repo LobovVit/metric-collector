@@ -28,7 +28,7 @@ type DBStorage struct {
 }
 
 func NewStorage(ctx context.Context, dsn string) (*DBStorage, error) {
-	dbCon, err := postgresql.NweConn(dsn)
+	dbCon, err := postgresql.NewConn(dsn)
 	if err != nil {
 		logger.Log.Error("Get db connection failed", zap.Error(err))
 		return nil, err

@@ -12,6 +12,7 @@ import (
 	"github.com/LobovVit/metric-collector/internal/agent/metrics"
 	"github.com/LobovVit/metric-collector/pkg/logger"
 	"github.com/LobovVit/metric-collector/pkg/retry"
+	"github.com/LobovVit/metric-collector/pkg/signature"
 	"github.com/go-resty/resty/v2"
 	"go.uber.org/zap"
 )
@@ -111,6 +112,13 @@ func (a *Agent) sendRequestJSON(ctx context.Context, metrics *metrics.Metrics) e
 		if err != nil {
 			return fmt.Errorf("compress json: %w", err)
 		}
+		if a.cfg.SigningKey != "" {
+			sign, err := signature.CreateSignature(metric, a.cfg.SigningKey)
+			if err != nil {
+				return fmt.Errorf("create signature: %w", err)
+			}
+			a.client.R().SetHeader("HashSHA256", fmt.Sprintf("%x", sign))
+		}
 		_, err = a.client.R().
 			SetContext(ctx).
 			SetHeader("Content-Type", "application/json").
@@ -131,6 +139,13 @@ func (a *Agent) sendRequestBatchJSON(ctx context.Context, metrics *metrics.Metri
 		return fmt.Errorf("marshal json: %w", err)
 	}
 	data, err = compress.Compress(data)
+	if a.cfg.SigningKey != "" {
+		sign, err := signature.CreateSignature(data, a.cfg.SigningKey)
+		if err != nil {
+			return fmt.Errorf("create signature: %w", err)
+		}
+		a.client.R().SetHeader("HashSHA256", fmt.Sprintf("%x", sign))
+	}
 	if err != nil {
 		return fmt.Errorf("compress json: %w", err)
 	}

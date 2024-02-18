@@ -13,6 +13,7 @@ type Config struct {
 	PollInterval   int64  `env:"POLL_INTERVAL"`
 	LogLevel       string `env:"LOG_LEVEL"`
 	ReportFormat   string `env:"REPORT_FORMAT"`
+	SigningKey     string `env:"KEY"`
 }
 
 func GetConfig() (*Config, error) {
@@ -27,6 +28,7 @@ func GetConfig() (*Config, error) {
 	pollInterval := flag.Int64("p", 2, "частота опроса метрик из пакета runtime")
 	logLevel := flag.String("l", "info", "log level")
 	reportFormat := flag.String("f", "batch", "формат передачи метрик json/text/batch")
+	signingKey := flag.String("k", "", "ключ")
 	flag.Parse()
 
 	if config.ReportFormat == "" {
@@ -49,6 +51,9 @@ func GetConfig() (*Config, error) {
 	}
 	if config.LogLevel == "" {
 		config.LogLevel = *logLevel
+	}
+	if config.SigningKey == "" {
+		config.SigningKey = *signingKey
 	}
 
 	return config, nil
