@@ -4,7 +4,9 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/LobovVit/metric-collector/pkg/logger"
 	"github.com/LobovVit/metric-collector/pkg/signature"
+	"go.uber.org/zap"
 )
 
 type signWriter struct {
@@ -43,12 +45,14 @@ func Signature(key string) func(h http.Handler) http.Handler {
 		fn := func(w http.ResponseWriter, r *http.Request) {
 			sw := w
 			if key != "" {
+				logger.Log.Info("ITER_14", zap.String("KEY", key))
 				sw = newSignWriter(w, key)
 				ok, err := signature.CheckSignature([]byte(r.Header.Get("HashSHA256")), key)
-				if err != nil || !ok {
-					w.WriteHeader(http.StatusBadRequest)
-					return
-				}
+				//if err != nil || !ok {
+				//	w.WriteHeader(http.StatusBadRequest)
+				//	return
+				//}
+				logger.Log.Info("ITER_14", zap.Bool("OK", ok), zap.Error(err))
 			}
 			next.ServeHTTP(sw, r)
 		}
