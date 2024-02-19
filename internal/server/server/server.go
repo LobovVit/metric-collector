@@ -33,12 +33,12 @@ func (a *Server) Run(ctx context.Context) error {
 	mux.Use(middleware.WithCompress)
 
 	mux.Get("/", a.allMetricsHandler)
-	mux.With(middleware.WithSignature(a.config.SigningKey)).Get("/ping", a.dbPingHandler)
-	mux.With(middleware.WithSignature(a.config.SigningKey)).Post("/value/", a.singleMetricJSONHandler)
-	mux.With(middleware.WithSignature(a.config.SigningKey)).Get("/value/{type}/{name}", a.singleMetricHandler)
+	mux.Get("/ping", a.dbPingHandler)
+	mux.Post("/value/", a.singleMetricJSONHandler)
+	mux.Get("/value/{type}/{name}", a.singleMetricHandler)
 	mux.With(middleware.WithSignature(a.config.SigningKey)).Post("/update/", a.updateJSONHandler)
 	mux.With(middleware.WithSignature(a.config.SigningKey)).Post("/updates/", a.updateBatchJSONHandler)
-	mux.With(middleware.WithSignature(a.config.SigningKey)).Post("/update/{type}/{name}/{value}", a.updateHandler)
+	mux.Post("/update/{type}/{name}/{value}", a.updateHandler)
 
 	logger.Log.Info("Starting server", zap.String("address", a.config.Host))
 
