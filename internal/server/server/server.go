@@ -36,7 +36,7 @@ func (a *Server) Run(ctx context.Context) error {
 	mux.Get("/ping", a.dbPingHandler)
 	mux.Post("/value/", a.singleMetricJSONHandler)
 	mux.Get("/value/{type}/{name}", a.singleMetricHandler)
-	mux.With(middleware.WithSignature(a.config.SigningKey)).Post("/update/", a.updateJSONHandler)
+	mux.Post("/update/", a.updateJSONHandler)
 	mux.With(middleware.WithSignature(a.config.SigningKey)).Post("/updates/", a.updateBatchJSONHandler)
 	mux.Post("/update/{type}/{name}/{value}", a.updateHandler)
 

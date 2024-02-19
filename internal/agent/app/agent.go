@@ -107,13 +107,13 @@ func (a *Agent) sendRequestJSON(ctx context.Context, metrics *metrics.Metrics) e
 		if err != nil {
 			return fmt.Errorf("marshal json: %w", err)
 		}
-		if a.cfg.SigningKey != "" {
-			sign, err := signature.CreateSignature(metric, a.cfg.SigningKey)
-			if err != nil {
-				return fmt.Errorf("create signature: %w", err)
-			}
-			a.client.SetHeader("HashSHA256", fmt.Sprintf("%x", sign))
-		}
+		//if a.cfg.SigningKey != "" {
+		//	sign, err := signature.CreateSignature(metric, a.cfg.SigningKey)
+		//	if err != nil {
+		//		return fmt.Errorf("create signature: %w", err)
+		//	}
+		//	a.client.SetHeader("HashSHA256", fmt.Sprintf("%x", sign))
+		//}
 		metric, err = compress.Compress(metric)
 		if err != nil {
 			return fmt.Errorf("compress json: %w", err)
