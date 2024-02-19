@@ -24,7 +24,6 @@ type Agent struct {
 
 func New(config *config.Config) *Agent {
 	agent := Agent{cfg: config, client: resty.New()}
-	agent.client.R().SetHeader("Content-Type", "text/plain")
 	return &agent
 }
 
@@ -108,7 +107,6 @@ func (a *Agent) sendRequestJSON(ctx context.Context, metrics *metrics.Metrics) e
 		if err != nil {
 			return fmt.Errorf("marshal json: %w", err)
 		}
-		metric, err = compress.Compress(metric)
 		if err != nil {
 			return fmt.Errorf("compress json: %w", err)
 		}
@@ -117,8 +115,9 @@ func (a *Agent) sendRequestJSON(ctx context.Context, metrics *metrics.Metrics) e
 			if err != nil {
 				return fmt.Errorf("create signature: %w", err)
 			}
-			a.client.R().SetHeader("HashSHA256", fmt.Sprintf("%x", sign))
+			a.client.SetHeader("HashSHA256", fmt.Sprintf("%x", sign))
 		}
+		metric, err = compress.Compress(metric)
 		_, err = a.client.R().
 			SetContext(ctx).
 			SetHeader("Content-Type", "application/json").
@@ -138,14 +137,14 @@ func (a *Agent) sendRequestBatchJSON(ctx context.Context, metrics *metrics.Metri
 	if err != nil {
 		return fmt.Errorf("marshal json: %w", err)
 	}
-	data, err = compress.Compress(data)
 	if a.cfg.SigningKey != "" {
 		sign, err := signature.CreateSignature(data, a.cfg.SigningKey)
 		if err != nil {
 			return fmt.Errorf("create signature: %w", err)
 		}
-		a.client.R().SetHeader("HashSHA256", fmt.Sprintf("%x", sign))
+		a.client.SetHeader("HashSHA256", fmt.Sprintf("%x", sign))
 	}
+	data, err = compress.Compress(data)
 	if err != nil {
 		return fmt.Errorf("compress json: %w", err)
 	}
@@ -155,7 +154,6 @@ func (a *Agent) sendRequestBatchJSON(ctx context.Context, metrics *metrics.Metri
 		SetHeader("Content-Encoding", "gzip").
 		SetBody(data).
 		Post(a.cfg.Host)
-
 	if err != nil {
 		return fmt.Errorf("send request json: %w", err)
 	}

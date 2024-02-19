@@ -17,16 +17,15 @@ func CreateSignature(data []byte, key string) ([]byte, error) {
 	return dst, nil
 }
 
-func CheckSignature(data []byte, key string) (bool, error) {
+func CheckSignature(data []byte, hash string, key string) error {
 	h := hmac.New(sha256.New, []byte(key))
 	_, err := h.Write(data)
 	if err != nil {
-		return false, fmt.Errorf("sign: %w", err)
+		return fmt.Errorf("sign: %w", err)
 	}
 	sign := h.Sum(nil)
-
-	if !hmac.Equal(sign, data) {
-		return false, errors.New("signature is not correct")
+	if !hmac.Equal([]byte(fmt.Sprintf("%x", sign)), []byte(hash)) {
+		return errors.New("signature is not correct")
 	}
-	return true, nil
+	return nil
 }

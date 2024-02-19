@@ -29,9 +29,10 @@ func New(ctx context.Context, config *config.Config) (*Server, error) {
 func (a *Server) Run(ctx context.Context) error {
 
 	mux := chi.NewRouter()
-	mux.Use(middleware.WithLogging,
-		middleware.WithCompress,
-		middleware.Signature(a.config.SigningKey))
+	mux.Use(middleware.WithLogging)
+	mux.Use(middleware.WithCompress)
+	mux.Use(middleware.WithSignature(a.config.SigningKey))
+
 	mux.Get("/", a.allMetricsHandler)
 	mux.Get("/ping", a.dbPingHandler)
 	mux.Post("/value/", a.singleMetricJSONHandler)

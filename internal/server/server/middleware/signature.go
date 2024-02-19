@@ -1,12 +1,12 @@
 package middleware
 
 import (
+	"bytes"
 	"fmt"
+	"io"
 	"net/http"
 
-	"github.com/LobovVit/metric-collector/pkg/logger"
 	"github.com/LobovVit/metric-collector/pkg/signature"
-	"go.uber.org/zap"
 )
 
 type signWriter struct {
@@ -40,19 +40,20 @@ func (s *signWriter) Write(p []byte) (int, error) {
 	return s.w.Write(p)
 }
 
-func Signature(key string) func(h http.Handler) http.Handler {
+func WithSignature(key string) func(h http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		fn := func(w http.ResponseWriter, r *http.Request) {
 			sw := w
 			if key != "" {
-				logger.Log.Info("ITER_14", zap.String("KEY", key))
 				sw = newSignWriter(w, key)
-				ok, err := signature.CheckSignature([]byte(r.Header.Get("HashSHA256")), key)
-				//if err != nil || !ok {
-				//	w.WriteHeader(http.StatusBadRequest)
-				//	return
-				//}
-				logger.Log.Info("ITER_14", zap.Bool("OK", ok), zap.Error(err))
+				body, _ := io.ReadAll(r.Body)
+				r.Body.Close()
+				r.Body = io.NopCloser(bytes.NewBuffer(body))
+				err := signature.CheckSignature(body, r.Header.Get("HashSHA256"), key)
+				if err != nil {
+					w.WriteHeader(http.StatusBadRequest)
+					return
+				}
 			}
 			next.ServeHTTP(sw, r)
 		}
