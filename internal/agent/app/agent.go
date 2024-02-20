@@ -107,16 +107,16 @@ func (a *Agent) sendRequestJSON(ctx context.Context, metrics *metrics.Metrics) e
 		if err != nil {
 			return fmt.Errorf("marshal json: %w", err)
 		}
+		metric, err = compress.Compress(metric)
+		if err != nil {
+			return fmt.Errorf("compress json: %w", err)
+		}
 		if a.cfg.SigningKey != "" {
 			sign, err := signature.CreateSignature(metric, a.cfg.SigningKey)
 			if err != nil {
 				return fmt.Errorf("create signature: %w", err)
 			}
 			a.client.SetHeader("HashSHA256", fmt.Sprintf("%x", sign))
-		}
-		metric, err = compress.Compress(metric)
-		if err != nil {
-			return fmt.Errorf("compress json: %w", err)
 		}
 		_, err = a.client.R().
 			SetContext(ctx).
@@ -137,16 +137,16 @@ func (a *Agent) sendRequestBatchJSON(ctx context.Context, metrics *metrics.Metri
 	if err != nil {
 		return fmt.Errorf("marshal json: %w", err)
 	}
+	data, err = compress.Compress(data)
+	if err != nil {
+		return fmt.Errorf("compress json: %w", err)
+	}
 	if a.cfg.SigningKey != "" {
 		sign, err := signature.CreateSignature(data, a.cfg.SigningKey)
 		if err != nil {
 			return fmt.Errorf("create signature: %w", err)
 		}
 		a.client.SetHeader("HashSHA256", fmt.Sprintf("%x", sign))
-	}
-	data, err = compress.Compress(data)
-	if err != nil {
-		return fmt.Errorf("compress json: %w", err)
 	}
 	_, err = a.client.R().
 		SetContext(ctx).
