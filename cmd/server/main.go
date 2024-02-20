@@ -27,6 +27,8 @@ func run() error {
 		return fmt.Errorf("log initialize: %w", err)
 	}
 	logger.Log.Info("Config", zap.String("SigningKey", cfg.SigningKey),
+		zap.String("SigningKey", fmt.Sprintf("%x", cfg.SigningKey)),
+		zap.String("SigningKey", string(cfg.SigningKey)),
 		zap.String("DSN", cfg.DSN),
 		zap.String("", cfg.LogLevel))
 	ctx, cancel := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGHUP, syscall.SIGTERM, syscall.SIGABRT)
