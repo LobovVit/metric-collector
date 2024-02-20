@@ -44,7 +44,7 @@ func WithSignature(key string) func(h http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		fn := func(w http.ResponseWriter, r *http.Request) {
 			sw := w
-			if key != "" {
+			if key != "" && r.Header.Get("HashSHA256") != "" {
 				sw = newSignWriter(w, key)
 				body, _ := io.ReadAll(r.Body)
 				r.Body.Close()
