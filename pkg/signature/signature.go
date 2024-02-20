@@ -5,6 +5,9 @@ import (
 	"crypto/sha256"
 	"errors"
 	"fmt"
+
+	"github.com/LobovVit/metric-collector/pkg/logger"
+	"go.uber.org/zap"
 )
 
 func CreateSignature(data []byte, key string) ([]byte, error) {
@@ -25,7 +28,15 @@ func CheckSignature(data []byte, hash string, key string) error {
 	}
 	sign := h.Sum(nil)
 	if !hmac.Equal([]byte(fmt.Sprintf("%x", sign)), []byte(hash)) {
+		logger.Log.Info("CheckSignatureERR", zap.String("data", string(data)),
+			zap.String("hash", hash),
+			zap.String("sign", fmt.Sprintf("%x", sign)),
+			zap.String("key", key))
 		return errors.New("signature is not correct")
 	}
+	logger.Log.Info("CheckSignatureOK", zap.String("data", string(data)),
+		zap.String("hash", hash),
+		zap.String("sign", fmt.Sprintf("%x", sign)),
+		zap.String("key", key))
 	return nil
 }
