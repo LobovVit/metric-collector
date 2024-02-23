@@ -30,7 +30,7 @@ func GetConfig() (*Config, error) {
 	logLevel := flag.String("log", "info", "log level")
 	reportFormat := flag.String("f", "batch", "формат передачи метрик json/text/batch")
 	signingKey := flag.String("k", "", "ключ")
-	rateLimit := flag.Int64("l", 10, "максимальное количество одновременно исходящих запросов на сервер")
+	rateLimit := flag.Int64("l", 10, "максимальное кол-во одновременно исходящих запросов на сервер")
 	flag.Parse()
 
 	if config.ReportFormat == "" {
