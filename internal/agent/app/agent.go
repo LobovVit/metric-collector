@@ -35,7 +35,7 @@ func (a *Agent) Run(ctx context.Context) error {
 	defer sendTicker.Stop()
 	defer readTicker.Stop()
 
-	sem := NewSemaphore(a.cfg.RateLimit)
+	sem := newSemaphore(a.cfg.RateLimit)
 
 	for {
 		select {
@@ -44,8 +44,8 @@ func (a *Agent) Run(ctx context.Context) error {
 			go m.GetMetricsGops()
 			logger.Log.Info("Read")
 		case <-sendTicker.C:
-			go func(*Semaphore) {
-				sem.Acquire()
+			go func(*semaphore) {
+				sem.acquire()
 				tmp := m.CounterExecMemStats
 				m.CounterExecMemStats = 0
 				err := a.sendRequestWithRetry(ctx, m)
@@ -53,7 +53,7 @@ func (a *Agent) Run(ctx context.Context) error {
 					m.CounterExecMemStats = tmp
 					logger.Log.Error("Send request failed", zap.Error(err))
 				}
-				sem.Release()
+				sem.release()
 			}(sem)
 			logger.Log.Info("Sent")
 		case <-ctx.Done():
@@ -68,7 +68,7 @@ func (a *Agent) sendRequestWithRetry(ctx context.Context, metrics *metrics.Metri
 	try := retry.New(3)
 	for {
 		err = a.sendRequest(ctx, metrics)
-		if err == nil || try.Run() {
+		if err == nil || !try.Run() {
 			break
 		}
 	}

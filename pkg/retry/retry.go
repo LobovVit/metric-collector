@@ -19,7 +19,7 @@ func New(attempts int) *Retry {
 	return ret
 }
 
-func (re *Retry) runTimer() {
+func (re *Retry) sleep() {
 	time.Sleep(re.interval)
 }
 
@@ -31,11 +31,11 @@ func (re *Retry) addIteration(delta int) {
 func (re *Retry) Run() bool {
 	re.addIteration(1)
 	if re.maxAttempts < re.curAttempts {
-		return true
+		return false
 	}
 	logger.Log.Info("Retry", zap.String("current attempt", re.String()))
-	re.runTimer()
-	return false
+	re.sleep()
+	return true
 }
 
 func (re *Retry) String() string {

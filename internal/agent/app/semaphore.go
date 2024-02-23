@@ -1,19 +1,19 @@
 package app
 
-type Semaphore struct {
+type semaphore struct {
 	semaCh chan struct{}
 }
 
-func NewSemaphore(maxReq int64) *Semaphore {
-	return &Semaphore{
+func newSemaphore(maxReq int64) *semaphore {
+	return &semaphore{
 		semaCh: make(chan struct{}, maxReq),
 	}
 }
 
-func (s *Semaphore) Acquire() {
+func (s *semaphore) acquire() {
 	s.semaCh <- struct{}{}
 }
 
-func (s *Semaphore) Release() {
+func (s *semaphore) release() {
 	<-s.semaCh
 }
