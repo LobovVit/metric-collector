@@ -35,19 +35,26 @@ func (a *Agent) Run(ctx context.Context) error {
 	defer sendTicker.Stop()
 	defer readTicker.Stop()
 
+	sem := NewSemaphore(a.cfg.RateLimit)
+
 	for {
 		select {
 		case <-readTicker.C:
-			m.GetMetrics()
+			go m.GetMetricsRuntime()
+			go m.GetMetricsGops()
 			logger.Log.Info("Read")
 		case <-sendTicker.C:
-			tmp := m.CounterExecMemStats
-			m.CounterExecMemStats = 0
-			err := a.sendRequestWithRetry(ctx, m)
-			if err != nil {
-				m.CounterExecMemStats = tmp
-				logger.Log.Error("Send request failed", zap.Error(err))
-			}
+			go func(*Semaphore) {
+				sem.Acquire()
+				tmp := m.CounterExecMemStats
+				m.CounterExecMemStats = 0
+				err := a.sendRequestWithRetry(ctx, m)
+				if err != nil {
+					m.CounterExecMemStats = tmp
+					logger.Log.Error("Send request failed", zap.Error(err))
+				}
+				sem.Release()
+			}(sem)
 			logger.Log.Info("Sent")
 		case <-ctx.Done():
 			logger.Log.Info("Shutdown")
@@ -69,6 +76,9 @@ func (a *Agent) sendRequestWithRetry(ctx context.Context, metrics *metrics.Metri
 }
 
 func (a *Agent) sendRequest(ctx context.Context, metrics *metrics.Metrics) error {
+	metrics.RwMutex.RLock()
+	defer metrics.RwMutex.RUnlock()
+
 	switch a.cfg.ReportFormat {
 	case "json":
 		return a.sendRequestJSON(ctx, metrics)

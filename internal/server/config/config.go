@@ -30,7 +30,7 @@ func GetConfig() (*Config, error) {
 	storeInterval := flag.Int("i", 30, "интервал сохранения на диск")
 	fileStoragePath := flag.String("f", "/tmp/metrics-db.json", "файл для сохранения на диск")
 	restore := flag.Bool("r", true, "загружать при старте данные из файла")
-	dsn := flag.String("d", "", "строка подключения к БД") //postgresql://postgres:password@10.66.66.3:5432/postgres?sslmode=disable
+	dsn := flag.String("d", "postgresql://postgres:password@10.66.66.3:5432/postgres?sslmode=disable", "строка подключения к БД") //postgresql://postgres:password@10.66.66.3:5432/postgres?sslmode=disable
 	signingKey := flag.String("k", "", "ключ")
 	flag.Parse()
 
