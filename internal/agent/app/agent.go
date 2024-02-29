@@ -30,7 +30,6 @@ func New(config *config.Config) *Agent {
 
 func (a *Agent) Run(ctx context.Context) error {
 	m := metrics.GetMetricStruct()
-	//var wg sync.WaitGroup
 	readTicker := time.NewTicker(time.Second * time.Duration(a.cfg.PollInterval))
 	defer readTicker.Stop()
 
