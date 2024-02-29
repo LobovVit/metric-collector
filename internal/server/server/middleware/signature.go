@@ -47,10 +47,14 @@ func WithSignature(key string) func(h http.Handler) http.Handler {
 			headerHash := r.Header.Get("HashSHA256")
 			if key != "" && headerHash != "" {
 				sw = newSignWriter(w, key)
-				body, _ := io.ReadAll(r.Body)
-				r.Body.Close()
+				body, err := io.ReadAll(r.Body)
+				defer r.Body.Close()
+				if err != nil {
+					w.WriteHeader(http.StatusBadRequest)
+					return
+				}
 				r.Body = io.NopCloser(bytes.NewBuffer(body))
-				err := signature.CheckSignature(body, headerHash, key)
+				err = signature.CheckSignature(body, headerHash, key)
 				if err != nil {
 					w.WriteHeader(http.StatusBadRequest)
 					return

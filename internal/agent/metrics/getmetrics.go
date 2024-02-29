@@ -4,6 +4,7 @@ import (
 	"math/rand"
 	"runtime"
 	"sync"
+	"sync/atomic"
 
 	gopsutil "github.com/shirou/gopsutil/v3/mem"
 )
@@ -17,25 +18,24 @@ type Metric struct {
 
 type Metrics struct {
 	Metrics             []Metric     `json:"Metrics,omitempty"`
-	CounterExecMemStats int64        `json:"-"`
+	CounterExecMemStats atomic.Int64 `json:"-"`
 	RwMutex             sync.RWMutex `json:"-"`
 }
 
 func GetMetricStruct() *Metrics {
-	return &Metrics{Metrics: make([]Metric, 32), CounterExecMemStats: 0}
+	return &Metrics{Metrics: make([]Metric, 32)}
 }
 
-func (m *Metrics) GetMetricsRuntime() {
+func (m *Metrics) GetMetrics() {
 	m.RwMutex.Lock()
 	defer m.RwMutex.Unlock()
-
-	var mem runtime.MemStats
-	runtime.ReadMemStats(&mem)
-	m.CounterExecMemStats += 1
 	//counter
-	delta := m.CounterExecMemStats
+	m.CounterExecMemStats.Add(1)
+	delta := m.CounterExecMemStats.Load()
 	m.Metrics[0] = Metric{ID: "PollCount", MType: "counter", Delta: &delta}
 	//runtime
+	var mem runtime.MemStats
+	runtime.ReadMemStats(&mem)
 	alloc := float64(mem.Alloc)
 	m.Metrics[1] = Metric{ID: "Alloc", MType: "gauge", Value: &alloc}
 	buckHashSys := float64(mem.BuckHashSys)
@@ -93,18 +93,8 @@ func (m *Metrics) GetMetricsRuntime() {
 	//RandomValue
 	randomValue := rand.Float64()
 	m.Metrics[28] = Metric{ID: "RandomValue", MType: "gauge", Value: &randomValue}
-}
-
-func (m *Metrics) GetMetricsGops() {
-	m.RwMutex.Lock()
-	defer m.RwMutex.Unlock()
-
-	gops, _ := gopsutil.VirtualMemory()
-	m.CounterExecMemStats += 1
-	//counter
-	delta := m.CounterExecMemStats
-	m.Metrics[0] = Metric{ID: "PollCount", MType: "counter", Delta: &delta}
 	//gopsutil
+	gops, _ := gopsutil.VirtualMemory()
 	totalMemory := float64(gops.Total)
 	m.Metrics[29] = Metric{ID: "TotalMemory", MType: "gauge", Value: &totalMemory}
 	freeMemory := float64(gops.Free)
