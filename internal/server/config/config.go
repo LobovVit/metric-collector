@@ -37,32 +37,25 @@ func GetConfig() (*Config, error) {
 	if config.Host == "" {
 		config.Host = *host
 	}
-
 	if config.LogLevel == "" {
 		config.LogLevel = *logLevel
 	}
-
 	_, exists := os.LookupEnv("STORE_INTERVAL")
 	if !exists {
 		config.StoreInterval = *storeInterval
 	}
-
 	if config.FileStoragePath == "" {
 		config.FileStoragePath = *fileStoragePath
 	}
-
 	_, exists = os.LookupEnv("RESTORE")
 	if !exists {
 		config.Restore = *restore
 	}
-
 	if config.DSN == "" {
 		config.DSN = *dsn
 	}
-
 	if config.SigningKey == "" {
 		config.SigningKey = *signingKey
 	}
-
 	return config, nil
 }
