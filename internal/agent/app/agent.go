@@ -183,7 +183,7 @@ func (a *Agent) sendRequestJSON(ctx context.Context, met *metrics.Metrics, sem *
 }
 
 func (a *Agent) sendRequestBatchJSON(ctx context.Context, met *metrics.Metrics, sem *semaphore) error {
-	var maxPart int = len(met.Metrics) / a.cfg.MaxCntInBatch
+	var maxPart = len(met.Metrics) / a.cfg.MaxCntInBatch
 	var ret error = nil
 	var wg sync.WaitGroup
 	for part := 0; part <= maxPart; part++ {
