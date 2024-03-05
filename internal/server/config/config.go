@@ -15,6 +15,7 @@ type Config struct {
 	FileStoragePath string `env:"FILE_STORAGE_PATH"`
 	Restore         bool   `env:"RESTORE"`
 	DSN             string `env:"DATABASE_DSN"`
+	SigningKey      string `env:"KEY"`
 }
 
 func GetConfig() (*Config, error) {
@@ -30,33 +31,31 @@ func GetConfig() (*Config, error) {
 	fileStoragePath := flag.String("f", "/tmp/metrics-db.json", "файл для сохранения на диск")
 	restore := flag.Bool("r", true, "загружать при старте данные из файла")
 	dsn := flag.String("d", "", "строка подключения к БД") //postgresql://postgres:password@10.66.66.3:5432/postgres?sslmode=disable
+	signingKey := flag.String("k", "", "ключ")
 	flag.Parse()
 
 	if config.Host == "" {
 		config.Host = *host
 	}
-
 	if config.LogLevel == "" {
 		config.LogLevel = *logLevel
 	}
-
 	_, exists := os.LookupEnv("STORE_INTERVAL")
 	if !exists {
 		config.StoreInterval = *storeInterval
 	}
-
 	if config.FileStoragePath == "" {
 		config.FileStoragePath = *fileStoragePath
 	}
-
 	_, exists = os.LookupEnv("RESTORE")
 	if !exists {
 		config.Restore = *restore
 	}
-
 	if config.DSN == "" {
 		config.DSN = *dsn
 	}
-
+	if config.SigningKey == "" {
+		config.SigningKey = *signingKey
+	}
 	return config, nil
 }

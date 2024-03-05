@@ -184,10 +184,10 @@ func (ms *MemStorage) Ping(ctx context.Context) error {
 }
 
 func (ms *MemStorage) SetBatch(ctx context.Context, metrics []metrics.Metrics) error {
-	ms.rwCounterMutex.RLock()
-	defer ms.rwCounterMutex.RUnlock()
-	ms.rwGaugeMutex.RLock()
-	defer ms.rwGaugeMutex.RUnlock()
+	ms.rwCounterMutex.Lock()
+	defer ms.rwCounterMutex.Unlock()
+	ms.rwGaugeMutex.Lock()
+	defer ms.rwGaugeMutex.Unlock()
 
 	for _, v := range metrics {
 		if v.MType == "gauge" {

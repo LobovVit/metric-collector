@@ -51,7 +51,7 @@ func (r *Repo) SaveToFile(ctx context.Context) error {
 	try := retry.New(3)
 	for {
 		err = r.storage.SaveToFile(ctx)
-		if err == nil || try.Run() || !r.storage.IsRetryable(err) {
+		if err == nil || !r.storage.IsRetryable(err) || !try.Run() {
 			break
 		}
 	}
@@ -63,7 +63,7 @@ func (r *Repo) LoadFromFile(ctx context.Context) error {
 	try := retry.New(3)
 	for {
 		err = r.storage.LoadFromFile(ctx)
-		if err == nil || try.Run() || !r.storage.IsRetryable(err) {
+		if err == nil || !r.storage.IsRetryable(err) || !try.Run() {
 			break
 		}
 	}
@@ -75,7 +75,7 @@ func (r *Repo) Ping(ctx context.Context) error {
 	try := retry.New(3)
 	for {
 		err = r.storage.Ping(ctx)
-		if err == nil || try.Run() || !r.storage.IsRetryable(err) {
+		if err == nil || !r.storage.IsRetryable(err) || !try.Run() {
 			break
 		}
 	}
@@ -87,7 +87,7 @@ func (r *Repo) SetBatch(ctx context.Context, metrics []metrics.Metrics) error {
 	try := retry.New(3)
 	for {
 		err = r.storage.SetBatch(ctx, metrics)
-		if err == nil || try.Run() || !r.storage.IsRetryable(err) {
+		if err == nil || !r.storage.IsRetryable(err) || !try.Run() {
 			break
 		}
 	}

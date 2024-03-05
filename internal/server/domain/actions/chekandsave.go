@@ -31,7 +31,7 @@ func (r *Repo) CheckAndSaveText(ctx context.Context, tp string, name string, val
 		}
 		for {
 			ret = r.storage.SetGauge(ctx, name, v)
-			if ret == nil || try.Run() || !r.storage.IsRetryable(ret) {
+			if ret == nil || !r.storage.IsRetryable(ret) || !try.Run() {
 				break
 			}
 		}
@@ -42,7 +42,7 @@ func (r *Repo) CheckAndSaveText(ctx context.Context, tp string, name string, val
 		}
 		for {
 			ret = r.storage.SetCounter(ctx, name, v)
-			if ret == nil || try.Run() || !r.storage.IsRetryable(ret) {
+			if ret == nil || !r.storage.IsRetryable(ret) || !try.Run() {
 				break
 			}
 		}
@@ -65,14 +65,14 @@ func (r *Repo) CheckAndSaveStruct(ctx context.Context, metrics metrics.Metrics) 
 	case "gauge":
 		for {
 			ret = r.storage.SetGauge(ctx, metrics.ID, *metrics.Value)
-			if ret == nil || try.Run() || !r.storage.IsRetryable(ret) {
+			if ret == nil || !r.storage.IsRetryable(ret) || !try.Run() {
 				break
 			}
 		}
 	case "counter":
 		for {
 			ret = r.storage.SetCounter(ctx, metrics.ID, *metrics.Delta)
-			if ret == nil || try.Run() || !r.storage.IsRetryable(ret) {
+			if ret == nil || !r.storage.IsRetryable(ret) || !try.Run() {
 				break
 			}
 		}
@@ -95,7 +95,7 @@ func (r *Repo) CheckAndSaveBatch(ctx context.Context, metrics []metrics.Metrics)
 	var ret error
 	for {
 		ret = r.storage.SetBatch(ctx, metrics)
-		if ret == nil || try.Run() || !r.storage.IsRetryable(ret) {
+		if ret == nil || !r.storage.IsRetryable(ret) || !try.Run() {
 			break
 		}
 	}

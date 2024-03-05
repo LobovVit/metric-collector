@@ -7,7 +7,7 @@ import (
 	_ "github.com/jackc/pgx/v5/stdlib"
 )
 
-func NweConn(dsn string) (*sql.DB, error) {
+func NewConn(dsn string) (*sql.DB, error) {
 	conn, err := sql.Open("pgx", dsn)
 	if err != nil {
 		return nil, fmt.Errorf("DB open: %w", err)

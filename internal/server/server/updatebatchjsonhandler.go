@@ -9,7 +9,6 @@ import (
 )
 
 func (a *Server) updateBatchJSONHandler(w http.ResponseWriter, r *http.Request) {
-
 	var metricsBatch []metrics.Metrics
 	var buf bytes.Buffer
 	_, err := buf.ReadFrom(r.Body)
@@ -17,7 +16,6 @@ func (a *Server) updateBatchJSONHandler(w http.ResponseWriter, r *http.Request) 
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
-
 	if err = json.Unmarshal(buf.Bytes(), &metricsBatch); err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
