@@ -14,7 +14,7 @@ type Config struct {
 	LogLevel       string `env:"LOG_LEVEL"`
 	ReportFormat   string `env:"REPORT_FORMAT"`
 	SigningKey     string `env:"KEY"`
-	RateLimit      int64  `env:"RATE_LIMIT"`
+	RateLimit      int    `env:"RATE_LIMIT"`
 	MaxCntInBatch  int    `env:"BATCH_LIMIT"`
 }
 
@@ -32,7 +32,7 @@ func GetConfig() (*Config, error) {
 	reportFormat := flag.String("f", "batch", "формат передачи метрик json/text/batch")
 	maxCntInBatch := flag.Int("m", 5, "максимальное количество метрик в батче")
 	signingKey := flag.String("k", "", "ключ")
-	rateLimit := flag.Int64("l", 10, "максимальное кол-во одновременно исходящих запросов на сервер")
+	rateLimit := flag.Int("l", 10, "максимальное кол-во одновременно исходящих запросов на сервер")
 	flag.Parse()
 
 	if config.ReportFormat == "" {

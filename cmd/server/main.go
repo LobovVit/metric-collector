@@ -12,12 +12,12 @@ import (
 )
 
 func main() {
-	if err := run(); err != nil {
+	if err := run(context.Background()); err != nil {
 		panic(err)
 	}
 }
 
-func run() error {
+func run(ctx context.Context) error {
 	cfg, err := config.GetConfig()
 	if err != nil {
 		return fmt.Errorf("get config: %w", err)
@@ -25,7 +25,7 @@ func run() error {
 	if err = logger.Initialize(cfg.LogLevel); err != nil {
 		return fmt.Errorf("log initialize: %w", err)
 	}
-	ctx, cancel := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGHUP, syscall.SIGTERM, syscall.SIGABRT)
+	ctx, cancel := signal.NotifyContext(ctx, syscall.SIGINT, syscall.SIGHUP, syscall.SIGTERM, syscall.SIGABRT)
 	defer cancel()
 	app, err := server.New(ctx, cfg)
 	if err != nil {

@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"compress/gzip"
 	"fmt"
+	"io"
 )
 
 func Compress(data []byte) ([]byte, error) {
@@ -18,4 +19,20 @@ func Compress(data []byte) ([]byte, error) {
 		return nil, fmt.Errorf("compress data: %w", err)
 	}
 	return b.Bytes(), nil
+}
+
+func UnCompress(data []byte) ([]byte, error) {
+	b := bytes.NewBuffer(data)
+	var r io.Reader
+	r, err := gzip.NewReader(b)
+	if err != nil {
+		return nil, fmt.Errorf("gzip reader: %w", err)
+	}
+	var resB bytes.Buffer
+	_, err = resB.ReadFrom(r)
+	if err != nil {
+		return nil, fmt.Errorf("read data to uncompress temporary buffer: %w", err)
+	}
+	resData := resB.Bytes()
+	return resData, nil
 }
