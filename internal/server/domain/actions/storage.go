@@ -47,17 +47,17 @@ func GetRepo(ctx context.Context, config *config.Config) (Repo, error) {
 }
 
 func (r *Repo) SaveToFile(ctx context.Context) error {
-	return retry.DoWithoutReturnNoParams(ctx, 3, r.storage.SaveToFile, r.storage.IsRetryable)
+	return retry.DoNoParams(ctx, 3, r.storage.SaveToFile, r.storage.IsRetryable)
 }
 
 func (r *Repo) LoadFromFile(ctx context.Context) error {
-	return retry.DoWithoutReturnNoParams(ctx, 3, r.storage.LoadFromFile, r.storage.IsRetryable)
+	return retry.DoNoParams(ctx, 3, r.storage.LoadFromFile, r.storage.IsRetryable)
 }
 
 func (r *Repo) Ping(ctx context.Context) error {
-	return retry.DoWithoutReturnNoParams(ctx, 3, r.storage.Ping, r.storage.IsRetryable)
+	return retry.DoNoParams(ctx, 3, r.storage.Ping, r.storage.IsRetryable)
 }
 
 func (r *Repo) SetBatch(ctx context.Context, metrics []metrics.Metrics) error {
-	return retry.DoWithoutReturn(ctx, 3, r.storage.SetBatch, metrics, r.storage.IsRetryable)
+	return retry.Do(ctx, 3, r.storage.SetBatch, metrics, r.storage.IsRetryable)
 }

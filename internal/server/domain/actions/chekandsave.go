@@ -21,30 +21,24 @@ func (e badRequestErr) Error() string {
 }
 
 func (r *Repo) CheckAndSaveText(ctx context.Context, tp string, name string, value string) error {
-	var ret error
-	try := retry.New(3)
 	switch tp {
 	case "gauge":
 		v, err := strconv.ParseFloat(value, 64)
 		if err != nil {
 			return badRequestErr{tp, value}
 		}
-		for {
-			ret = r.storage.SetGauge(ctx, name, v)
-			if ret == nil || !r.storage.IsRetryable(ret) || !try.Run() {
-				break
-			}
+		err = retry.DoTwoParams(ctx, 3, r.storage.SetGauge, name, v, r.storage.IsRetryable)
+		if err != nil {
+			return err
 		}
 	case "counter":
 		v, err := strconv.ParseInt(value, 10, 64)
 		if err != nil {
 			return badRequestErr{tp, value}
 		}
-		for {
-			ret = r.storage.SetCounter(ctx, name, v)
-			if ret == nil || !r.storage.IsRetryable(ret) || !try.Run() {
-				break
-			}
+		err = retry.DoTwoParams(ctx, 3, r.storage.SetCounter, name, v, r.storage.IsRetryable)
+		if err != nil {
+			return err
 		}
 	default:
 		return badRequestErr{tp, value}
@@ -55,26 +49,20 @@ func (r *Repo) CheckAndSaveText(ctx context.Context, tp string, name string, val
 			logger.Log.Error("Immediately save failed", zap.Error(err))
 		}
 	}
-	return ret
+	return nil
 }
 
 func (r *Repo) CheckAndSaveStruct(ctx context.Context, metrics metrics.Metrics) (metrics.Metrics, error) {
-	var ret error
-	try := retry.New(3)
 	switch metrics.MType {
 	case "gauge":
-		for {
-			ret = r.storage.SetGauge(ctx, metrics.ID, *metrics.Value)
-			if ret == nil || !r.storage.IsRetryable(ret) || !try.Run() {
-				break
-			}
+		err := retry.DoTwoParams(ctx, 3, r.storage.SetGauge, metrics.ID, *metrics.Value, r.storage.IsRetryable)
+		if err != nil {
+			return metrics, err
 		}
 	case "counter":
-		for {
-			ret = r.storage.SetCounter(ctx, metrics.ID, *metrics.Delta)
-			if ret == nil || !r.storage.IsRetryable(ret) || !try.Run() {
-				break
-			}
+		err := retry.DoTwoParams(ctx, 3, r.storage.SetCounter, metrics.ID, *metrics.Delta, r.storage.IsRetryable)
+		if err != nil {
+			return metrics, err
 		}
 		tmp, _ := r.storage.GetSingle(ctx, metrics.MType, metrics.ID)
 		*metrics.Delta, _ = strconv.ParseInt(tmp, 10, 64)
@@ -87,11 +75,11 @@ func (r *Repo) CheckAndSaveStruct(ctx context.Context, metrics metrics.Metrics) 
 			logger.Log.Error("Immediately save failed", zap.Error(err))
 		}
 	}
-	return metrics, ret
+	return metrics, nil
 }
 
 func (r *Repo) CheckAndSaveBatch(ctx context.Context, metrics []metrics.Metrics) ([]metrics.Metrics, error) {
-	err := retry.DoWithoutReturn(ctx, 3, r.storage.SetBatch, metrics, r.storage.IsRetryable)
+	err := retry.Do(ctx, 3, r.storage.SetBatch, metrics, r.storage.IsRetryable)
 	if err != nil {
 		return metrics, err
 	}
