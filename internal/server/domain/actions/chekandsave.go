@@ -91,19 +91,15 @@ func (r *Repo) CheckAndSaveStruct(ctx context.Context, metrics metrics.Metrics) 
 }
 
 func (r *Repo) CheckAndSaveBatch(ctx context.Context, metrics []metrics.Metrics) ([]metrics.Metrics, error) {
-	try := retry.New(3)
-	var ret error
-	for {
-		ret = r.storage.SetBatch(ctx, metrics)
-		if ret == nil || !r.storage.IsRetryable(ret) || !try.Run() {
-			break
-		}
+	err := retry.DoWithoutReturn(ctx, 3, r.storage.SetBatch, metrics, r.storage.IsRetryable)
+	if err != nil {
+		return metrics, err
 	}
 	if r.needImmediatelySave {
-		err := r.SaveToFile(ctx)
+		err = r.SaveToFile(ctx)
 		if err != nil {
 			logger.Log.Error("Immediately save failed", zap.Error(err))
 		}
 	}
-	return metrics, ret
+	return metrics, nil
 }

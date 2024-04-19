@@ -47,49 +47,17 @@ func GetRepo(ctx context.Context, config *config.Config) (Repo, error) {
 }
 
 func (r *Repo) SaveToFile(ctx context.Context) error {
-	var err error
-	try := retry.New(3)
-	for {
-		err = r.storage.SaveToFile(ctx)
-		if err == nil || !r.storage.IsRetryable(err) || !try.Run() {
-			break
-		}
-	}
-	return err
+	return retry.DoWithoutReturnNoParams(ctx, 3, r.storage.SaveToFile, r.storage.IsRetryable)
 }
 
 func (r *Repo) LoadFromFile(ctx context.Context) error {
-	var err error
-	try := retry.New(3)
-	for {
-		err = r.storage.LoadFromFile(ctx)
-		if err == nil || !r.storage.IsRetryable(err) || !try.Run() {
-			break
-		}
-	}
-	return err
+	return retry.DoWithoutReturnNoParams(ctx, 3, r.storage.LoadFromFile, r.storage.IsRetryable)
 }
 
 func (r *Repo) Ping(ctx context.Context) error {
-	var err error
-	try := retry.New(3)
-	for {
-		err = r.storage.Ping(ctx)
-		if err == nil || !r.storage.IsRetryable(err) || !try.Run() {
-			break
-		}
-	}
-	return err
+	return retry.DoWithoutReturnNoParams(ctx, 3, r.storage.Ping, r.storage.IsRetryable)
 }
 
 func (r *Repo) SetBatch(ctx context.Context, metrics []metrics.Metrics) error {
-	var err error
-	try := retry.New(3)
-	for {
-		err = r.storage.SetBatch(ctx, metrics)
-		if err == nil || !r.storage.IsRetryable(err) || !try.Run() {
-			break
-		}
-	}
-	return err
+	return retry.DoWithoutReturn(ctx, 3, r.storage.SetBatch, metrics, r.storage.IsRetryable)
 }
