@@ -22,7 +22,7 @@ func Do[T any](ctx context.Context, repeat int, retryFunc func(context.Context, 
 			break
 		}
 		if i < repeat-1 {
-			time.Sleep(time.Second * 3)
+			time.Sleep(time.Second * 2 * time.Duration(i+1))
 		}
 	}
 	return err
@@ -44,7 +44,7 @@ func DoTwoParams[T1, T2 any](ctx context.Context, repeat int, retryFunc func(con
 			break
 		}
 		if i < repeat-1 {
-			time.Sleep(time.Second * 3)
+			time.Sleep(time.Second * 2 * time.Duration(i+1))
 		}
 	}
 	return err
@@ -66,7 +66,7 @@ func DoNoParams(ctx context.Context, repeat int, retryFunc func(context.Context)
 			break
 		}
 		if i < repeat-1 {
-			time.Sleep(time.Second * 3)
+			time.Sleep(time.Second * 2 * time.Duration(i+1))
 		}
 	}
 	return err
