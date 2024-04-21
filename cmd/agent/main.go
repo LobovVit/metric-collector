@@ -11,12 +11,14 @@ import (
 	"github.com/LobovVit/metric-collector/pkg/logger"
 )
 
+// main - function that is executed at startup and is the entry point to the program
 func main() {
 	if err := run(context.Background()); err != nil {
 		panic(err)
 	}
 }
 
+// run - function starts the application, initializes the config and logger, creates an instance of the agent and launches it
 func run(ctx context.Context) error {
 	cfg, err := config.GetConfig()
 	if err != nil {

@@ -1,3 +1,4 @@
+// Package retry - included retry functions
 package retry
 
 import (
@@ -5,6 +6,7 @@ import (
 	"time"
 )
 
+// Do - retry function with one any parameter and context, function returning only error
 func Do[T any](ctx context.Context, repeat int, retryFunc func(context.Context, T) error, p T, isRepeatableFunc func(err error) bool) error {
 	var err error
 	for i := 0; i < repeat; i++ {
@@ -26,6 +28,7 @@ func Do[T any](ctx context.Context, repeat int, retryFunc func(context.Context, 
 	return err
 }
 
+// DoTwoParams - retry function with two any parameter and context, function returning only error
 func DoTwoParams[T1, T2 any](ctx context.Context, repeat int, retryFunc func(context.Context, T1, T2) error, p1 T1, p2 T2, isRepeatableFunc func(err error) bool) error {
 	var err error
 	for i := 0; i < repeat; i++ {
@@ -47,6 +50,7 @@ func DoTwoParams[T1, T2 any](ctx context.Context, repeat int, retryFunc func(con
 	return err
 }
 
+// DoNoParams - retry function without any parameter only context, function returning only error
 func DoNoParams(ctx context.Context, repeat int, retryFunc func(context.Context) error, isRepeatableFunc func(err error) bool) error {
 	var err error
 	for i := 0; i < repeat; i++ {

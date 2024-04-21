@@ -1,3 +1,4 @@
+// Package config - included struct and init function fow work with app configuration
 package config
 
 import (
@@ -19,6 +20,7 @@ type Config struct {
 	MaxCntInBatch  int    `env:"BATCH_LIMIT"`
 }
 
+// GetConfig - method creates a new configuration and sets values from environment variables and command line flags
 func GetConfig() (*Config, error) {
 	config := &Config{}
 	err := env.Parse(config)
