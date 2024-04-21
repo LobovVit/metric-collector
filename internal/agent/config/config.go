@@ -7,6 +7,7 @@ import (
 	"github.com/caarlos0/env/v6"
 )
 
+// Config determines the basic parameters of the agent's operation
 type Config struct {
 	Host           string `env:"ADDRESS"`
 	ReportInterval int64  `env:"REPORT_INTERVAL"`
