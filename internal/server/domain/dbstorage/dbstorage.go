@@ -6,12 +6,13 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/LobovVit/metric-collector/internal/server/domain/metrics"
-	"github.com/LobovVit/metric-collector/pkg/logger"
-	"github.com/LobovVit/metric-collector/pkg/postgresql"
 	"github.com/jackc/pgerrcode"
 	"github.com/jackc/pgx/v5/pgconn"
 	"go.uber.org/zap"
+
+	"github.com/LobovVit/metric-collector/internal/server/domain/metrics"
+	"github.com/LobovVit/metric-collector/pkg/logger"
+	"github.com/LobovVit/metric-collector/pkg/postgresql"
 )
 
 type notFoundMetricError struct {

@@ -8,21 +8,24 @@ import (
 	"sync"
 	"time"
 
+	"github.com/go-resty/resty/v2"
+	"go.uber.org/zap"
+	"golang.org/x/sync/errgroup"
+
 	"github.com/LobovVit/metric-collector/internal/agent/compress"
 	"github.com/LobovVit/metric-collector/internal/agent/config"
 	"github.com/LobovVit/metric-collector/internal/agent/metrics"
 	"github.com/LobovVit/metric-collector/pkg/logger"
 	"github.com/LobovVit/metric-collector/pkg/signature"
-	"github.com/go-resty/resty/v2"
-	"go.uber.org/zap"
-	"golang.org/x/sync/errgroup"
 )
 
+// Agent struct is used to create Agent with settings.
 type Agent struct {
 	cfg    *config.Config
 	client *resty.Client
 }
 
+// New method creates a new Agent.
 func New(config *config.Config) *Agent {
 	agent := Agent{cfg: config, client: resty.New()}
 	return &agent

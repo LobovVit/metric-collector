@@ -5,10 +5,11 @@ import (
 	"fmt"
 	"strconv"
 
+	"go.uber.org/zap"
+
 	"github.com/LobovVit/metric-collector/internal/server/domain/metrics"
 	"github.com/LobovVit/metric-collector/pkg/logger"
 	"github.com/LobovVit/metric-collector/pkg/retry"
-	"go.uber.org/zap"
 )
 
 type badRequestErr struct {

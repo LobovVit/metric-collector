@@ -4,8 +4,9 @@ import (
 	"context"
 	"testing"
 
-	"github.com/LobovVit/metric-collector/internal/server/config"
 	"github.com/stretchr/testify/assert"
+
+	"github.com/LobovVit/metric-collector/internal/server/config"
 )
 
 type met struct {

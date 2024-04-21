@@ -7,9 +7,10 @@ import (
 	"testing"
 	"time"
 
+	"github.com/go-resty/resty/v2"
+
 	"github.com/LobovVit/metric-collector/internal/agent/config"
 	"github.com/LobovVit/metric-collector/internal/agent/metrics"
-	"github.com/go-resty/resty/v2"
 )
 
 func TestAgent_Run(t *testing.T) {

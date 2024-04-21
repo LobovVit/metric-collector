@@ -4,8 +4,9 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/LobovVit/metric-collector/pkg/logger"
 	"go.uber.org/zap"
+
+	"github.com/LobovVit/metric-collector/pkg/logger"
 )
 
 type (

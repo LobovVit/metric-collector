@@ -4,13 +4,14 @@ import (
 	"context"
 	"net/http"
 
+	"github.com/go-chi/chi/v5"
+	"go.uber.org/zap"
+	"golang.org/x/sync/errgroup"
+
 	"github.com/LobovVit/metric-collector/internal/server/config"
 	"github.com/LobovVit/metric-collector/internal/server/domain/actions"
 	"github.com/LobovVit/metric-collector/internal/server/server/middleware"
 	"github.com/LobovVit/metric-collector/pkg/logger"
-	"github.com/go-chi/chi/v5"
-	"go.uber.org/zap"
-	"golang.org/x/sync/errgroup"
 )
 
 type Server struct {

@@ -4,8 +4,9 @@ import (
 	"context"
 	"net/http/httptest"
 
-	"github.com/LobovVit/metric-collector/internal/server/config"
 	"github.com/go-chi/chi/v5"
+
+	"github.com/LobovVit/metric-collector/internal/server/config"
 )
 
 var TS = ServerRun()
