@@ -7,18 +7,18 @@ import (
 	"testing"
 )
 
-var retryable = errors.New("retryable")
+var errRetryable = errors.New("retryable")
 
 func IsRetryable(err error) bool {
 	if err == nil {
 		return false
 	}
-	return errors.Is(err, retryable)
+	return errors.Is(err, errRetryable)
 }
 
 func oneParamR(ctx context.Context, p1 int) error {
 	p1++
-	return retryable
+	return errRetryable
 }
 
 func oneParamN(ctx context.Context, p1 int) error {
@@ -52,13 +52,13 @@ func TestDo(t *testing.T) {
 }
 
 func noParamR(ctx context.Context) error {
-	var i int = 0
+	var i = 0
 	i++
-	return retryable
+	return errRetryable
 }
 
 func noParamN(ctx context.Context) error {
-	var i int = 0
+	var i = 0
 	i++
 	return nil
 }
@@ -90,7 +90,7 @@ func TestDoNoParams(t *testing.T) {
 func twoParamR(ctx context.Context, p1, p2 int) error {
 	p1++
 	p2++
-	return retryable
+	return errRetryable
 }
 
 func twoParamN(ctx context.Context, p1, p2 int) error {
@@ -128,7 +128,7 @@ func TestDoTwoParams(t *testing.T) {
 func ExampleDo() {
 	err := Do(context.Background(), 3, oneParamR, 1, IsRetryable)
 	if err != nil {
-		fmt.Printf(err.Error())
+		fmt.Print(err.Error())
 	}
 
 	// Output:
