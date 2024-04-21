@@ -22,7 +22,7 @@ func Initialize(level string) error {
 	once.Do(func() {
 		lvl, err := zap.ParseAtomicLevel(level)
 		if err != nil {
-			log.Printf("log parse level: %w", err)
+			log.Printf("log parse level: %v", err)
 		}
 
 		cfg := zap.NewProductionConfig()
@@ -32,7 +32,7 @@ func Initialize(level string) error {
 
 		zl, err := cfg.Build()
 		if err != nil {
-			log.Printf("log build: %w", err)
+			log.Printf("log build: %v", err)
 		}
 
 		Log = zl
