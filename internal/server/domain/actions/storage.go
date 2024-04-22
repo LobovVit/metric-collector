@@ -1,3 +1,4 @@
+// Package actions - contains methods for working with abstract storage
 package actions
 
 import (
@@ -10,12 +11,14 @@ import (
 	"github.com/LobovVit/metric-collector/pkg/retry"
 )
 
+// Repo - structure containing abstract storage
 type Repo struct {
-	storage             repository
+	storage
 	needImmediatelySave bool
 }
 
-type repository interface {
+// storage -
+type storage interface {
 	SetGauge(ctx context.Context, key string, val float64) error
 	SetCounter(ctx context.Context, key string, val int64) error
 	GetAll(ctx context.Context) (map[string]map[string]string, error)

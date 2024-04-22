@@ -1,3 +1,4 @@
+// Package dbstorage - db storage implements the repository interface
 package dbstorage
 
 import (
@@ -24,10 +25,12 @@ func (e notFoundMetricError) Error() string {
 	return fmt.Sprintf("not found metric type:\"%v\" with name:\"%v\"", e.tp, e.name)
 }
 
+// DBStorage - storage
 type DBStorage struct {
 	dbConnections *sql.DB
 }
 
+// NewStorage - method creates a new DBStorage
 func NewStorage(ctx context.Context, dsn string) (*DBStorage, error) {
 	dbCon, err := postgresql.NewConn(dsn)
 	if err != nil {
@@ -50,6 +53,7 @@ func NewStorage(ctx context.Context, dsn string) (*DBStorage, error) {
 	return s, nil
 }
 
+// SetGauge - method writes values to storage
 func (ms *DBStorage) SetGauge(ctx context.Context, key string, val float64) error {
 	const upsertSQL = `INSERT INTO metrics (id, MType, Value) VALUES ($1, 'gauge', $2) ON CONFLICT(id) DO UPDATE set Value = EXCLUDED.Value`
 	_, err := ms.dbConnections.ExecContext(ctx, upsertSQL, key, val)
@@ -60,6 +64,7 @@ func (ms *DBStorage) SetGauge(ctx context.Context, key string, val float64) erro
 	return nil
 }
 
+// SetCounter - method writes values to storage
 func (ms *DBStorage) SetCounter(ctx context.Context, key string, val int64) error {
 	const upsertSQL = `INSERT INTO metrics AS a (id, MType, Delta) VALUES ($1, 'counter', $2) ON CONFLICT(id) DO UPDATE set Delta = a.Delta + EXCLUDED.Delta`
 	_, err := ms.dbConnections.ExecContext(ctx, upsertSQL, key, val)
@@ -70,6 +75,7 @@ func (ms *DBStorage) SetCounter(ctx context.Context, key string, val int64) erro
 	return nil
 }
 
+// GetAll - method returns all values from storage
 func (ms *DBStorage) GetAll(ctx context.Context) (map[string]map[string]string, error) {
 	ret := make(map[string]map[string]string, 2)
 	retGauge := make(map[string]string)
@@ -109,6 +115,7 @@ func (ms *DBStorage) GetAll(ctx context.Context) (map[string]map[string]string, 
 	return ret, nil
 }
 
+// GetSingle - method returns single value from storage
 func (ms *DBStorage) GetSingle(ctx context.Context, tp string, name string) (string, error) {
 
 	const selectSQL = `select id, MType, coalesce(Delta,-1), coalesce(Value,-1) from metrics where MType = $1 and id = $2`
@@ -132,17 +139,22 @@ func (ms *DBStorage) GetSingle(ctx context.Context, tp string, name string) (str
 	return "", notFoundMetricError{tp, name}
 }
 
+// LoadFromFile - mock for LoadFromFile method (needed only for file storage)
 func (ms *DBStorage) LoadFromFile(ctx context.Context) error {
 	return nil
 }
 
+// SaveToFile - mock for SaveToFile method (needed only for file storage)
 func (ms *DBStorage) SaveToFile(ctx context.Context) error {
 	return nil
 }
 
+// Ping - method tests the connection to the database
 func (ms *DBStorage) Ping(ctx context.Context) error {
 	return ms.dbConnections.PingContext(ctx)
 }
+
+// SetBatch - method writes array values to storage
 func (ms *DBStorage) SetBatch(ctx context.Context, metrics []metrics.Metrics) error {
 	tx, err := ms.dbConnections.BeginTx(ctx, nil)
 	if err != nil {
@@ -166,6 +178,7 @@ func (ms *DBStorage) SetBatch(ctx context.Context, metrics []metrics.Metrics) er
 	return tx.Commit()
 }
 
+// IsRetryable - determines the type of error (whether it is suitable for re-execution)
 func (ms *DBStorage) IsRetryable(err error) bool {
 	if err == nil {
 		return false

@@ -1,3 +1,4 @@
+// Package memstorage - file storage implements the repository interface
 package memstorage
 
 import (
@@ -24,6 +25,7 @@ func (e notFoundMetricError) Error() string {
 	return fmt.Sprintf("not found metric type:\"%v\" with name:\"%v\"", e.tp, e.name)
 }
 
+// MemStorage - storage
 type MemStorage struct {
 	Gauge           map[string]float64
 	Counter         map[string]int64
@@ -33,6 +35,7 @@ type MemStorage struct {
 	fileStoragePath string
 }
 
+// NewStorage - method creates a new MemStorage and sets values from config flags
 func NewStorage(ctx context.Context, needRestore bool, storeInterval int, fileStoragePath string) (*MemStorage, error) {
 	s := &MemStorage{Gauge: make(map[string]float64), Counter: make(map[string]int64), storeInterval: storeInterval, fileStoragePath: fileStoragePath}
 	if needRestore {
@@ -45,6 +48,7 @@ func NewStorage(ctx context.Context, needRestore bool, storeInterval int, fileSt
 	return s, nil
 }
 
+// SetGauge - method thread-safely writes values to storage
 func (ms *MemStorage) SetGauge(ctx context.Context, key string, val float64) error {
 	ms.rwGaugeMutex.Lock()
 	defer ms.rwGaugeMutex.Unlock()
@@ -52,6 +56,7 @@ func (ms *MemStorage) SetGauge(ctx context.Context, key string, val float64) err
 	return nil
 }
 
+// SetCounter - method thread-safely writes values to storage
 func (ms *MemStorage) SetCounter(ctx context.Context, key string, val int64) error {
 	ms.rwCounterMutex.Lock()
 	defer ms.rwCounterMutex.Unlock()
@@ -59,6 +64,7 @@ func (ms *MemStorage) SetCounter(ctx context.Context, key string, val int64) err
 	return nil
 }
 
+// GetAll - method returns all values from storage
 func (ms *MemStorage) GetAll(ctx context.Context) (map[string]map[string]string, error) {
 	ms.rwCounterMutex.RLock()
 	defer ms.rwCounterMutex.RUnlock()
@@ -79,6 +85,7 @@ func (ms *MemStorage) GetAll(ctx context.Context) (map[string]map[string]string,
 	return ret, nil
 }
 
+// GetSingle - method returns single value from storage
 func (ms *MemStorage) GetSingle(ctx context.Context, tp string, name string) (string, error) {
 	switch tp {
 	case "gauge":
@@ -101,6 +108,7 @@ func (ms *MemStorage) GetSingle(ctx context.Context, tp string, name string) (st
 	return "", notFoundMetricError{tp, name}
 }
 
+// SaveToFile - method saves values from storage to file
 func (ms *MemStorage) SaveToFile(ctx context.Context) error {
 	ms.rwCounterMutex.RLock()
 	defer ms.rwCounterMutex.RUnlock()
@@ -136,6 +144,7 @@ func (ms *MemStorage) SaveToFile(ctx context.Context) error {
 	return nil
 }
 
+// LoadFromFile - method loads values from file to storage
 func (ms *MemStorage) LoadFromFile(ctx context.Context) error {
 	ms.rwCounterMutex.RLock()
 	defer ms.rwCounterMutex.RUnlock()
@@ -164,6 +173,7 @@ func (ms *MemStorage) LoadFromFile(ctx context.Context) error {
 	return nil
 }
 
+// StartPeriodicSave - method starts periodic save from storage to file
 func (ms *MemStorage) StartPeriodicSave(ctx context.Context) {
 	if ms.storeInterval == 0 {
 		return
@@ -180,10 +190,12 @@ func (ms *MemStorage) StartPeriodicSave(ctx context.Context) {
 	}()
 }
 
+// Ping - mock for Ping method (needed only for db storage)
 func (ms *MemStorage) Ping(ctx context.Context) error {
 	return fmt.Errorf("no db")
 }
 
+// SetBatch - method thread-safely writes array values to storage
 func (ms *MemStorage) SetBatch(ctx context.Context, metrics []metrics.Metrics) error {
 	ms.rwCounterMutex.Lock()
 	defer ms.rwCounterMutex.Unlock()
@@ -201,6 +213,7 @@ func (ms *MemStorage) SetBatch(ctx context.Context, metrics []metrics.Metrics) e
 	return nil
 }
 
+// IsRetryable - determines the type of error (whether it is suitable for re-execution)
 func (ms *MemStorage) IsRetryable(err error) bool {
 	if err == nil {
 		return false
