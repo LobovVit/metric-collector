@@ -85,11 +85,11 @@ func TestRepo(t *testing.T) {
 				if err != nil && !tt.wantErr {
 					t.Errorf("LoadFromFile() error = %v, wantErr %v", err, tt.wantErr)
 				}
-				_, err := r.GetSingleValText(tt.args.ctx, tt.args.metrics[0].MType, "k1")
+				_, err := r.GetSingle(tt.args.ctx, tt.args.metrics[0].MType, "k1")
 				if err != nil && !tt.wantErr {
 					t.Errorf("GetSingleValText() error = %v, wantErr %v", err, tt.wantErr)
 				}
-				_, err = r.GetSingleValText(tt.args.ctx, tt.args.metrics[1].MType, "k2")
+				_, err = r.GetSingle(tt.args.ctx, tt.args.metrics[1].MType, "k2")
 				if err != nil && !tt.wantErr {
 					t.Errorf("GetSingleValText() error = %v, wantErr %v", err, tt.wantErr)
 				}
