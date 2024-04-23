@@ -105,7 +105,7 @@ func TestHandlers(t *testing.T) {
 			updTextResp.Body.Close()
 			getTextResp, _ := request(t, TS, tt.method2, tt.path4, tt.data2)
 			assert.Equal(t, tt.want.statusCode, getTextResp.StatusCode)
-			updTextResp.Body.Close()
+			getTextResp.Body.Close()
 			getPingResp, _ := request(t, TS, tt.method2, tt.path5, tt.data2)
 			assert.Equal(t, http.StatusInternalServerError, getPingResp.StatusCode)
 			getPingResp.Body.Close()
