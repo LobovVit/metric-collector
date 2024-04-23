@@ -6,6 +6,7 @@ import (
 	"github.com/go-chi/chi/v5"
 )
 
+// singleMetricHandler - handler processing the receipt of one metric through request parameters
 func (a *Server) singleMetricHandler(w http.ResponseWriter, r *http.Request) {
 	tp := chi.URLParam(r, "type")
 	name := chi.URLParam(r, "name")

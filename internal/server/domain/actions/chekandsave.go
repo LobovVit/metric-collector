@@ -1,3 +1,4 @@
+// Package actions - contains methods for working with abstract storage
 package actions
 
 import (
@@ -21,6 +22,7 @@ func (e badRequestErr) Error() string {
 	return fmt.Sprintf("bad request metric type:\"%v\" with value:\"%v\"", e.tp, e.value)
 }
 
+// CheckAndSaveText - method checks and writes values to storage using string params
 func (r *Repo) CheckAndSaveText(ctx context.Context, tp string, name string, value string) error {
 	switch tp {
 	case "gauge":
@@ -53,6 +55,7 @@ func (r *Repo) CheckAndSaveText(ctx context.Context, tp string, name string, val
 	return nil
 }
 
+// CheckAndSaveStruct - method checks and writes values to storage using struct param
 func (r *Repo) CheckAndSaveStruct(ctx context.Context, metrics metrics.Metrics) (metrics.Metrics, error) {
 	switch metrics.MType {
 	case "gauge":
@@ -79,6 +82,7 @@ func (r *Repo) CheckAndSaveStruct(ctx context.Context, metrics metrics.Metrics) 
 	return metrics, nil
 }
 
+// CheckAndSaveBatch - method checks and writes array of values to storage
 func (r *Repo) CheckAndSaveBatch(ctx context.Context, metrics []metrics.Metrics) ([]metrics.Metrics, error) {
 	err := retry.Do(ctx, 3, r.storage.SetBatch, metrics, r.storage.IsRetryable)
 	if err != nil {

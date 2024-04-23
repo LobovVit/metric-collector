@@ -8,6 +8,7 @@ import (
 	"github.com/LobovVit/metric-collector/internal/server/domain/metrics"
 )
 
+// singleMetricJSONHandler - handler processing receiving one metric via JSON
 func (a *Server) singleMetricJSONHandler(w http.ResponseWriter, r *http.Request) {
 	var metric metrics.Metrics
 	var buf bytes.Buffer

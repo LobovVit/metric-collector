@@ -1,3 +1,4 @@
+// Package app - contains all the agent operation logic
 package app
 
 import (
@@ -8,29 +9,30 @@ import (
 	"sync"
 	"time"
 
+	"github.com/LobovVit/metric-collector/pkg/compress"
 	"github.com/go-resty/resty/v2"
 	"go.uber.org/zap"
 	"golang.org/x/sync/errgroup"
 
-	"github.com/LobovVit/metric-collector/internal/agent/compress"
 	"github.com/LobovVit/metric-collector/internal/agent/config"
 	"github.com/LobovVit/metric-collector/internal/agent/metrics"
 	"github.com/LobovVit/metric-collector/pkg/logger"
 	"github.com/LobovVit/metric-collector/pkg/signature"
 )
 
-// Agent struct is used to create Agent with settings.
+// Agent - struct is used to create Agent with settings.
 type Agent struct {
 	cfg    *config.Config
 	client *resty.Client
 }
 
-// New method creates a new Agent.
+// New - method creates a new Agent.
 func New(config *config.Config) *Agent {
 	agent := Agent{cfg: config, client: resty.New()}
 	return &agent
 }
 
+// Run - method starts an agent instance
 func (a *Agent) Run(ctx context.Context) error {
 	m := metrics.GetMetricStruct()
 	logger.Log.Info("Run")

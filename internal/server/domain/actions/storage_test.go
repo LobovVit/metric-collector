@@ -19,8 +19,8 @@ func TestGetRepo(t *testing.T) {
 		args    args
 		wantErr bool
 	}{
-		{name: "test", args: args{ctx: context.Background(), config: &config.Config{Restore: false, StoreInterval: 0, FileStoragePath: "/tmp/metrics-db.json"}}, wantErr: false},
-		{name: "test2", args: args{ctx: context.Background(), config: &config.Config{DSN: "postgresql://postgres", Restore: false, StoreInterval: 0, FileStoragePath: "/tmp/metrics-db.json"}}, wantErr: true},
+		{name: "test get repo file", args: args{ctx: context.Background(), config: &config.Config{Restore: false, StoreInterval: 0, FileStoragePath: "/tmp/metrics-db.json"}}, wantErr: false},
+		{name: "test get repo db", args: args{ctx: context.Background(), config: &config.Config{DSN: "postgresql://postgres", Restore: false, StoreInterval: 0, FileStoragePath: "/tmp/metrics-db.json"}}, wantErr: true},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -43,13 +43,13 @@ func TestRepo(t *testing.T) {
 		args    args
 		wantErr bool
 	}{
-		{name: "test_f_ok", args: args{ctx: context.Background(), config: &config.Config{Restore: false, StoreInterval: 0, FileStoragePath: "/tmp/metrics-db.json"},
+		{name: "test file ok #1", args: args{ctx: context.Background(), config: &config.Config{Restore: false, StoreInterval: 0, FileStoragePath: "/tmp/metrics-db.json"},
 			metrics: []metrics.Metrics{{ID: "k1", MType: "gauge"}, {ID: "k2", MType: "counter"}},
 		}, wantErr: false},
-		{name: "test_db_err", args: args{ctx: context.Background(), config: &config.Config{DSN: "postgresql://postgres", Restore: false, StoreInterval: 0, FileStoragePath: "/tmp/metrics-db.json"},
+		{name: "test db err", args: args{ctx: context.Background(), config: &config.Config{DSN: "postgresql://postgres", Restore: false, StoreInterval: 0, FileStoragePath: "/tmp/metrics-db.json"},
 			metrics: []metrics.Metrics{{ID: "k1", MType: "gauge"}, {ID: "k2", MType: "counter"}},
 		}, wantErr: true},
-		{name: "test_f_ok2", args: args{ctx: context.Background(),
+		{name: "test file ok #2", args: args{ctx: context.Background(),
 			config:  &config.Config{Restore: true, StoreInterval: 0, FileStoragePath: "/tmp/metrics-db.json"},
 			metrics: []metrics.Metrics{{ID: "k1", MType: "gauge"}, {ID: "k2", MType: "counter"}},
 		}, wantErr: true},

@@ -1,3 +1,4 @@
+// Package middleware - included middleware for http handlers
 package middleware
 
 import (
@@ -66,6 +67,7 @@ func (c *compressReader) Close() error {
 	return c.zr.Close()
 }
 
+// WithCompress - middleware for data compression and decompression
 func WithCompress(h http.Handler) http.Handler {
 	logFn := func(w http.ResponseWriter, r *http.Request) {
 		ow := w

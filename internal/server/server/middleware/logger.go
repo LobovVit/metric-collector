@@ -1,3 +1,4 @@
+// Package middleware - included middleware for http handlers
 package middleware
 
 import (
@@ -31,6 +32,7 @@ func (r *loggingResponseWriter) Write(b []byte) (int, error) {
 	return size, err
 }
 
+// WithLogging - middleware for logging requests
 func WithLogging(h http.Handler) http.Handler {
 	logFn := func(w http.ResponseWriter, r *http.Request) {
 		start := time.Now()

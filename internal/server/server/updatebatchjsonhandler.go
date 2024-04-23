@@ -8,6 +8,7 @@ import (
 	"github.com/LobovVit/metric-collector/internal/server/domain/metrics"
 )
 
+// updateBatchJSONHandler - handler that handles passing a set of metrics via JSON
 func (a *Server) updateBatchJSONHandler(w http.ResponseWriter, r *http.Request) {
 	var metricsBatch []metrics.Metrics
 	var buf bytes.Buffer

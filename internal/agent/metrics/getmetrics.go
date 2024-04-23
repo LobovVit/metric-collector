@@ -1,3 +1,4 @@
+// Package metrics - contains methods for collecting metrics
 package metrics
 
 import (
@@ -9,6 +10,7 @@ import (
 	gopsutil "github.com/shirou/gopsutil/v3/mem"
 )
 
+// Metric - basic element
 type Metric struct {
 	ID    string   `json:"id"`              // имя метрики
 	MType string   `json:"type"`            // параметр, принимающий значение gauge или counter
@@ -16,16 +18,19 @@ type Metric struct {
 	Value *float64 `json:"value,omitempty"` // значение метрики в случае передачи gauge
 }
 
+// Metrics - included array of basic element and few additional elements
 type Metrics struct {
 	Metrics             []Metric     `json:"Metrics,omitempty"`
 	CounterExecMemStats atomic.Int64 `json:"-"`
 	RwMutex             sync.RWMutex `json:"-"`
 }
 
+// GetMetricStruct - metrics structure constructor
 func GetMetricStruct() *Metrics {
 	return &Metrics{Metrics: make([]Metric, 32)}
 }
 
+// GetMetrics - method for collecting metrics
 func (m *Metrics) GetMetrics() {
 	m.RwMutex.Lock()
 	defer m.RwMutex.Unlock()

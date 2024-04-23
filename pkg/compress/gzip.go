@@ -1,3 +1,4 @@
+// Package compress - contains methods for compressing and decompressing data
 package compress
 
 import (
@@ -7,6 +8,7 @@ import (
 	"io"
 )
 
+// Compress - methods for compressing data
 func Compress(data []byte) ([]byte, error) {
 	var b bytes.Buffer
 	w := gzip.NewWriter(&b)
@@ -21,6 +23,7 @@ func Compress(data []byte) ([]byte, error) {
 	return b.Bytes(), nil
 }
 
+// UnCompress - methods for decompressing data
 func UnCompress(data []byte) ([]byte, error) {
 	b := bytes.NewBuffer(data)
 	var r io.Reader

@@ -8,6 +8,7 @@ import (
 	"github.com/LobovVit/metric-collector/internal/server/domain/metrics"
 )
 
+// updateJSONHandler - handler that handles passing metrics via JSON
 func (a *Server) updateJSONHandler(w http.ResponseWriter, r *http.Request) {
 
 	var metric metrics.Metrics

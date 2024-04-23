@@ -4,6 +4,7 @@ import (
 	"net/http"
 )
 
+// dbPingHandler - handler returning the connection status to the DB
 func (a *Server) dbPingHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "text/plain")
 	err := a.storage.Ping(r.Context())

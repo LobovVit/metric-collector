@@ -16,15 +16,15 @@ func TestSignature(t *testing.T) {
 		wantErr bool
 	}{
 		{
-			name:    "valid-1",
+			name:    "test signature #1",
 			args:    args{data: []byte("test"), key: "sec-key"},
 			wantErr: false,
 		}, {
-			name:    "valid-2",
+			name:    "test signature #2",
 			args:    args{data: []byte("te\nst"), key: "sec\nkey"},
 			wantErr: false,
 		}, {
-			name:    "valid-3",
+			name:    "test signature #3",
 			args:    args{data: []byte("test"), key: ""},
 			wantErr: false,
 		},

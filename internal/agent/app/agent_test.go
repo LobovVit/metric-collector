@@ -51,9 +51,9 @@ func TestAgent_sendRequest(t *testing.T) {
 		args    args
 		wantErr bool
 	}{
-		{name: "test single", fields: fields{cfg: &config.Config{ReportFormat: "batch", MaxCntInBatch: 10, RateLimit: 3}, client: resty.New()}, args: args{ctx: context.Background(), metrics: metrics.GetMetricStruct()}, wantErr: false},
-		{name: "test single", fields: fields{cfg: &config.Config{ReportFormat: "json", MaxCntInBatch: 10, RateLimit: 3}, client: resty.New()}, args: args{ctx: context.Background(), metrics: metrics.GetMetricStruct()}, wantErr: false},
-		{name: "test single", fields: fields{cfg: &config.Config{ReportFormat: "text", MaxCntInBatch: 10, RateLimit: 3}, client: resty.New()}, args: args{ctx: context.Background(), metrics: metrics.GetMetricStruct()}, wantErr: false},
+		{name: "test batch mode", fields: fields{cfg: &config.Config{ReportFormat: "batch", MaxCntInBatch: 10, RateLimit: 3}, client: resty.New()}, args: args{ctx: context.Background(), metrics: metrics.GetMetricStruct()}, wantErr: false},
+		{name: "test json mode", fields: fields{cfg: &config.Config{ReportFormat: "json", MaxCntInBatch: 10, RateLimit: 3}, client: resty.New()}, args: args{ctx: context.Background(), metrics: metrics.GetMetricStruct()}, wantErr: false},
+		{name: "test text mode", fields: fields{cfg: &config.Config{ReportFormat: "text", MaxCntInBatch: 10, RateLimit: 3}, client: resty.New()}, args: args{ctx: context.Background(), metrics: metrics.GetMetricStruct()}, wantErr: false},
 	}
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 	}))

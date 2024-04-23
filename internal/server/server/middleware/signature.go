@@ -1,3 +1,4 @@
+// Package middleware - included middleware for http handlers
 package middleware
 
 import (
@@ -40,6 +41,7 @@ func (s *signWriter) Write(p []byte) (int, error) {
 	return s.w.Write(p)
 }
 
+// WithSignature - middleware for checking signature requests
 func WithSignature(key string) func(h http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		fn := func(w http.ResponseWriter, r *http.Request) {

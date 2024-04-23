@@ -12,7 +12,7 @@ func TestGetConfig(t *testing.T) {
 		want    *Config
 		wantErr bool
 	}{
-		{name: "test_config", want: &Config{
+		{name: "test get config", want: &Config{
 			Host:            "localhost:8080",
 			LogLevel:        "info",
 			StoreInterval:   30,

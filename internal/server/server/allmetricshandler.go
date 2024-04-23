@@ -7,6 +7,7 @@ import (
 	"strings"
 )
 
+// allMetricsHandler - handler returning all server data in html format
 func (a *Server) allMetricsHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "text/html")
 	res, err := a.storage.GetAll(r.Context())

@@ -11,7 +11,7 @@ func Test_run(t *testing.T) {
 		name    string
 		wantErr bool
 	}{
-		{name: "OK",
+		{name: "check run agent",
 			wantErr: true},
 	}
 	for _, tt := range tests {

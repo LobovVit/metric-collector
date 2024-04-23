@@ -6,6 +6,7 @@ import (
 	"github.com/go-chi/chi/v5"
 )
 
+// updateHandler - handler that handles passing metrics through request parameters
 func (a *Server) updateHandler(w http.ResponseWriter, r *http.Request) {
 	tp := chi.URLParam(r, "type")
 	name := chi.URLParam(r, "name")

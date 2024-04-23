@@ -39,8 +39,8 @@ func TestDo(t *testing.T) {
 		args    args
 		wantErr bool
 	}{
-		{name: "test1", args: args{ctx: context.Background(), repeat: 3, retryFunc: oneParamR, p: 1, isRepeatableFunc: IsRetryable}, wantErr: true},
-		{name: "test2", args: args{ctx: context.Background(), repeat: 3, retryFunc: oneParamN, p: 1, isRepeatableFunc: IsRetryable}, wantErr: false},
+		{name: "test retry one param #1", args: args{ctx: context.Background(), repeat: 3, retryFunc: oneParamR, p: 1, isRepeatableFunc: IsRetryable}, wantErr: true},
+		{name: "test retry one param #2", args: args{ctx: context.Background(), repeat: 3, retryFunc: oneParamN, p: 1, isRepeatableFunc: IsRetryable}, wantErr: false},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -75,8 +75,8 @@ func TestDoNoParams(t *testing.T) {
 		args    args
 		wantErr bool
 	}{
-		{name: "test1", args: args{ctx: context.Background(), repeat: 3, retryFunc: noParamR, isRepeatableFunc: IsRetryable}, wantErr: true},
-		{name: "test2", args: args{ctx: context.Background(), repeat: 3, retryFunc: noParamN, isRepeatableFunc: IsRetryable}, wantErr: false},
+		{name: "test retry no param #1", args: args{ctx: context.Background(), repeat: 3, retryFunc: noParamR, isRepeatableFunc: IsRetryable}, wantErr: true},
+		{name: "test retry no param #2", args: args{ctx: context.Background(), repeat: 3, retryFunc: noParamN, isRepeatableFunc: IsRetryable}, wantErr: false},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -113,8 +113,8 @@ func TestDoTwoParams(t *testing.T) {
 		args    args
 		wantErr bool
 	}{
-		{name: "test1", args: args{ctx: context.Background(), repeat: 3, retryFunc: twoParamR, p1: 1, p2: 1, isRepeatableFunc: IsRetryable}, wantErr: true},
-		{name: "test1", args: args{ctx: context.Background(), repeat: 3, retryFunc: twoParamN, p1: 1, p2: 1, isRepeatableFunc: IsRetryable}, wantErr: false},
+		{name: "test retry two params #1", args: args{ctx: context.Background(), repeat: 3, retryFunc: twoParamR, p1: 1, p2: 1, isRepeatableFunc: IsRetryable}, wantErr: true},
+		{name: "test retry two params #2", args: args{ctx: context.Background(), repeat: 3, retryFunc: twoParamN, p1: 1, p2: 1, isRepeatableFunc: IsRetryable}, wantErr: false},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

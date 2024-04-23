@@ -14,8 +14,8 @@ func TestMemStorage(t *testing.T) {
 		val  float64
 	}{
 		{
-			name: "test1",
-			key:  "metr1",
+			name: "test nem storage",
+			key:  "metric1",
 			val:  12332,
 		},
 	}

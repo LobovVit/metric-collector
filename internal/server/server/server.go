@@ -1,3 +1,4 @@
+// Package server - included methods for running the http server, register handlers and middleware, and their implementation
 package server
 
 import (
@@ -14,11 +15,13 @@ import (
 	"github.com/LobovVit/metric-collector/pkg/logger"
 )
 
+// Server - structure containing a server instance
 type Server struct {
 	config  *config.Config
 	storage actions.Repo
 }
 
+// New - method to create server instance
 func New(ctx context.Context, config *config.Config) (*Server, error) {
 	repo, err := actions.GetRepo(ctx, config)
 	if err != nil {
@@ -27,6 +30,7 @@ func New(ctx context.Context, config *config.Config) (*Server, error) {
 	return &Server{config: config, storage: repo}, nil
 }
 
+// Run - method to start server instance
 func (a *Server) Run(ctx context.Context) error {
 
 	mux := chi.NewRouter()
@@ -66,6 +70,7 @@ func (a *Server) Run(ctx context.Context) error {
 	return nil
 }
 
+// RouterShutdown - method that implements saving the server state when shutting down
 func (a *Server) RouterShutdown(ctx context.Context) {
 	err := a.storage.SaveToFile(ctx)
 	if err != nil {

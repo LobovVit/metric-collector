@@ -1,3 +1,4 @@
+// Package main - contains the main function that runs the agent application
 package main
 
 import (

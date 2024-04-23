@@ -14,7 +14,7 @@ func TestInitialize(t *testing.T) {
 		args    args
 		wantErr bool
 	}{
-		{name: "TestInitialize", args: args{level: "debug"}, wantErr: false},
+		{name: "Test initialize logger", args: args{level: "debug"}, wantErr: false},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

@@ -31,7 +31,7 @@ func TestMetrics_GetMetrics(t *testing.T) {
 		name   string
 		fields fields
 	}{
-		{name: "test metrics",
+		{name: "test get metrics",
 			fields: fields{Metrics: []Metric{}},
 		},
 	}

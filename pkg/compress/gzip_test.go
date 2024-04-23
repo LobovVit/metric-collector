@@ -14,11 +14,11 @@ func TestCompress(t *testing.T) {
 		arg     args
 		wantErr bool
 	}{
-		{name: "compress1", arg: args{data: []byte("hello world")}, wantErr: false},
-		{name: "compress2", arg: args{data: []byte("hello \n world")}, wantErr: false},
-		{name: "compress3", arg: args{data: []byte("{hello world}")}, wantErr: false},
-		{name: "compress4", arg: args{data: []byte("Привет мир")}, wantErr: false},
-		{name: "compress5", arg: args{data: []byte("!\"№%:,.;())}")}, wantErr: false},
+		{name: "test compress #1", arg: args{data: []byte("hello world")}, wantErr: false},
+		{name: "test compress #2", arg: args{data: []byte("hello \n world")}, wantErr: false},
+		{name: "test compress #3", arg: args{data: []byte("{hello world}")}, wantErr: false},
+		{name: "test compress #4", arg: args{data: []byte("Привет мир")}, wantErr: false},
+		{name: "test compress #5", arg: args{data: []byte("!\"№%:,.;())}")}, wantErr: false},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

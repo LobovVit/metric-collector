@@ -1,3 +1,4 @@
+// Package main - contains the main function that runs the server application
 package main
 
 import (
