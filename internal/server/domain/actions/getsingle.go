@@ -1,3 +1,4 @@
+// Package actions - contains methods for working with abstract storage
 package actions
 
 import (
@@ -7,21 +8,18 @@ import (
 	"github.com/LobovVit/metric-collector/internal/server/domain/metrics"
 )
 
-func (r *Repo) GetSingleValText(ctx context.Context, tp string, name string) (string, error) {
-	return r.storage.GetSingle(ctx, tp, name)
-}
-
+// GetSingleValStruct - method returns single value from storage, using struct values
 func (r *Repo) GetSingleValStruct(ctx context.Context, metrics metrics.Metrics) (metrics.Metrics, error) {
 	switch metrics.MType {
 	case "gauge":
-		val, err := r.storage.GetSingle(ctx, metrics.MType, metrics.ID)
+		val, err := r.GetSingle(ctx, metrics.MType, metrics.ID)
 		if err != nil {
 			return metrics, err
 		}
 		valFl, _ := strconv.ParseFloat(val, 64)
 		metrics.Value = &valFl
 	case "counter":
-		val, err := r.storage.GetSingle(ctx, metrics.MType, metrics.ID)
+		val, err := r.GetSingle(ctx, metrics.MType, metrics.ID)
 		if err != nil {
 			return metrics, err
 		}

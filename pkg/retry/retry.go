@@ -1,43 +1,73 @@
+// Package retry - included retry functions
 package retry
 
 import (
-	"strconv"
+	"context"
 	"time"
-
-	"github.com/LobovVit/metric-collector/pkg/logger"
-	"go.uber.org/zap"
 )
 
-type Retry struct {
-	curAttempts int
-	maxAttempts int
-	interval    time.Duration
-}
+// Do - retry function with one any parameter and context, function returning only error
+func Do[T any](ctx context.Context, repeat int, retryFunc func(context.Context, T) error, p T, isRepeatableFunc func(err error) bool) error {
+	var err error
+	for i := 0; i < repeat; i++ {
+		// Return immediately if ctx is canceled
+		select {
+		case <-ctx.Done():
+			return ctx.Err()
+		default:
+		}
 
-func New(attempts int) *Retry {
-	ret := &Retry{maxAttempts: attempts}
-	return ret
-}
-
-func (re *Retry) sleep() {
-	time.Sleep(re.interval)
-}
-
-func (re *Retry) addIteration(delta int) {
-	re.interval = re.interval + time.Duration(re.curAttempts+1)*time.Second
-	re.curAttempts = re.curAttempts + delta
-}
-
-func (re *Retry) Run() bool {
-	re.addIteration(1)
-	if re.maxAttempts < re.curAttempts {
-		return false
+		err = retryFunc(ctx, p)
+		if err == nil || !isRepeatableFunc(err) {
+			break
+		}
+		if i < repeat-1 {
+			time.Sleep(time.Second * 2 * time.Duration(i+1))
+		}
 	}
-	logger.Log.Info("Retry", zap.String("current attempt", re.String()))
-	re.sleep()
-	return true
+	return err
 }
 
-func (re *Retry) String() string {
-	return "attempt=" + strconv.Itoa(re.curAttempts) + " delay=" + re.interval.String()
+// DoTwoParams - retry function with two any parameter and context, function returning only error
+func DoTwoParams[T1, T2 any](ctx context.Context, repeat int, retryFunc func(context.Context, T1, T2) error, p1 T1, p2 T2, isRepeatableFunc func(err error) bool) error {
+	var err error
+	for i := 0; i < repeat; i++ {
+		// Return immediately if ctx is canceled
+		select {
+		case <-ctx.Done():
+			return ctx.Err()
+		default:
+		}
+
+		err = retryFunc(ctx, p1, p2)
+		if err == nil || !isRepeatableFunc(err) {
+			break
+		}
+		if i < repeat-1 {
+			time.Sleep(time.Second * 2 * time.Duration(i+1))
+		}
+	}
+	return err
+}
+
+// DoNoParams - retry function without any parameter only context, function returning only error
+func DoNoParams(ctx context.Context, repeat int, retryFunc func(context.Context) error, isRepeatableFunc func(err error) bool) error {
+	var err error
+	for i := 0; i < repeat; i++ {
+		// Return immediately if ctx is canceled
+		select {
+		case <-ctx.Done():
+			return ctx.Err()
+		default:
+		}
+
+		err = retryFunc(ctx)
+		if err == nil || !isRepeatableFunc(err) {
+			break
+		}
+		if i < repeat-1 {
+			time.Sleep(time.Second * 2 * time.Duration(i+1))
+		}
+	}
+	return err
 }

@@ -1,3 +1,4 @@
+// Package signature - included create and check signature
 package signature
 
 import (
@@ -7,6 +8,7 @@ import (
 	"fmt"
 )
 
+// CreateSignature creating hash use sha256 algo
 func CreateSignature(data []byte, key string) ([]byte, error) {
 	h := hmac.New(sha256.New, []byte(key))
 	_, err := h.Write(data)
@@ -17,6 +19,7 @@ func CreateSignature(data []byte, key string) ([]byte, error) {
 	return dst, nil
 }
 
+// CheckSignature checking hash use sha256 algo
 func CheckSignature(data []byte, hash string, key string) error {
 	h := hmac.New(sha256.New, []byte(key))
 	_, err := h.Write(data)

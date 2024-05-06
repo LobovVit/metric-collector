@@ -1,3 +1,4 @@
+// Package app - contains all the agent operation logic
 package app
 
 import (
@@ -8,27 +9,30 @@ import (
 	"sync"
 	"time"
 
-	"github.com/LobovVit/metric-collector/internal/agent/compress"
-	"github.com/LobovVit/metric-collector/internal/agent/config"
-	"github.com/LobovVit/metric-collector/internal/agent/metrics"
-	"github.com/LobovVit/metric-collector/pkg/logger"
-	"github.com/LobovVit/metric-collector/pkg/retry"
-	"github.com/LobovVit/metric-collector/pkg/signature"
+	"github.com/LobovVit/metric-collector/pkg/compress"
 	"github.com/go-resty/resty/v2"
 	"go.uber.org/zap"
 	"golang.org/x/sync/errgroup"
+
+	"github.com/LobovVit/metric-collector/internal/agent/config"
+	"github.com/LobovVit/metric-collector/internal/agent/metrics"
+	"github.com/LobovVit/metric-collector/pkg/logger"
+	"github.com/LobovVit/metric-collector/pkg/signature"
 )
 
+// Agent - struct is used to create Agent with settings.
 type Agent struct {
 	cfg    *config.Config
 	client *resty.Client
 }
 
+// New - method creates a new Agent.
 func New(config *config.Config) *Agent {
 	agent := Agent{cfg: config, client: resty.New()}
 	return &agent
 }
 
+// Run - method starts an agent instance
 func (a *Agent) Run(ctx context.Context) error {
 	m := metrics.GetMetricStruct()
 	logger.Log.Info("Run")
@@ -79,15 +83,8 @@ func (a *Agent) Run(ctx context.Context) error {
 }
 
 func (a *Agent) sendRequestWithRetry(ctx context.Context, metrics *metrics.Metrics) error {
-	var err error
-	try := retry.New(3)
-	for {
-		err = a.sendRequest(ctx, metrics)
-		if err == nil || !try.Run() {
-			break
-		}
-	}
-	return err
+	a.client.SetRetryCount(3).SetRetryWaitTime(3 * time.Second)
+	return a.sendRequest(ctx, metrics)
 }
 
 func (a *Agent) sendRequest(ctx context.Context, metrics *metrics.Metrics) error {
@@ -108,11 +105,11 @@ func (a *Agent) sendRequest(ctx context.Context, metrics *metrics.Metrics) error
 
 func (a *Agent) sendRequestsText(ctx context.Context, met *metrics.Metrics) error {
 	g := errgroup.Group{}
-	sem := newSemaphore(a.cfg.RateLimit)
+	g.SetLimit(a.cfg.RateLimit)
 	for _, v := range met.Metrics {
 		val := v
 		g.Go(func() error {
-			return a.sendSingleRequestText(ctx, val, sem)
+			return a.sendSingleRequestText(ctx, val)
 		})
 	}
 	if err := g.Wait(); err != nil {
@@ -122,10 +119,8 @@ func (a *Agent) sendRequestsText(ctx context.Context, met *metrics.Metrics) erro
 	return nil
 }
 
-func (a *Agent) sendSingleRequestText(ctx context.Context, singleMetric metrics.Metric, sem *semaphore) error {
+func (a *Agent) sendSingleRequestText(ctx context.Context, singleMetric metrics.Metric) error {
 	var val string
-	sem.acquire()
-	defer sem.release()
 	switch singleMetric.MType {
 	case "gauge":
 		val = strconv.FormatFloat(*singleMetric.Value, 'f', 10, 64)
@@ -144,11 +139,11 @@ func (a *Agent) sendSingleRequestText(ctx context.Context, singleMetric metrics.
 
 func (a *Agent) sendRequestsJSON(ctx context.Context, met *metrics.Metrics) error {
 	g := errgroup.Group{}
-	sem := newSemaphore(a.cfg.RateLimit)
+	g.SetLimit(a.cfg.RateLimit)
 	for _, v := range met.Metrics {
 		val := v
 		g.Go(func() error {
-			return a.sendSingleRequestJSON(ctx, val, sem)
+			return a.sendSingleRequestJSON(ctx, val)
 		})
 	}
 	if err := g.Wait(); err != nil {
@@ -158,9 +153,7 @@ func (a *Agent) sendRequestsJSON(ctx context.Context, met *metrics.Metrics) erro
 	return nil
 }
 
-func (a *Agent) sendSingleRequestJSON(ctx context.Context, singleMetric metrics.Metric, sem *semaphore) error {
-	sem.acquire()
-	defer sem.release()
+func (a *Agent) sendSingleRequestJSON(ctx context.Context, singleMetric metrics.Metric) error {
 	metric, err := json.Marshal(singleMetric)
 	if err != nil {
 
@@ -193,7 +186,7 @@ func (a *Agent) sendSingleRequestJSON(ctx context.Context, singleMetric metrics.
 func (a *Agent) sendRequestsBatchJSON(ctx context.Context, met *metrics.Metrics) error {
 	var maxPart = len(met.Metrics) / a.cfg.MaxCntInBatch
 	g := errgroup.Group{}
-	sem := newSemaphore(a.cfg.RateLimit)
+	g.SetLimit(a.cfg.RateLimit)
 	for part := 0; part <= maxPart; part++ {
 		startPos := part * a.cfg.MaxCntInBatch
 		endPos := part*a.cfg.MaxCntInBatch + a.cfg.MaxCntInBatch
@@ -202,7 +195,7 @@ func (a *Agent) sendRequestsBatchJSON(ctx context.Context, met *metrics.Metrics)
 		}
 		val := met.Metrics[startPos:endPos]
 		g.Go(func() error {
-			return a.sendSingleRequestBatchJSON(ctx, val, sem)
+			return a.sendSingleRequestBatchJSON(ctx, val)
 		})
 	}
 	if err := g.Wait(); err != nil {
@@ -212,9 +205,7 @@ func (a *Agent) sendRequestsBatchJSON(ctx context.Context, met *metrics.Metrics)
 	return nil
 }
 
-func (a *Agent) sendSingleRequestBatchJSON(ctx context.Context, singlePartMetric []metrics.Metric, sem *semaphore) error {
-	sem.acquire()
-	defer sem.release()
+func (a *Agent) sendSingleRequestBatchJSON(ctx context.Context, singlePartMetric []metrics.Metric) error {
 	data, err := json.Marshal(singlePartMetric)
 	if err != nil {
 		return fmt.Errorf("marshal json: %w", err)

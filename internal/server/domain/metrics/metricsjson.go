@@ -1,5 +1,7 @@
+// Package metrics - contains the structure of the basic Metrics element.
 package metrics
 
+// Metrics - basic element.
 type Metrics struct {
 	ID    string   `json:"id"`              // имя метрики
 	MType string   `json:"type"`            // параметр, принимающий значение gauge или counter

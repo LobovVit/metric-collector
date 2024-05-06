@@ -1,3 +1,4 @@
+// Package postgresql - included functions for init SQL connections
 package postgresql
 
 import (
@@ -7,6 +8,7 @@ import (
 	_ "github.com/jackc/pgx/v5/stdlib"
 )
 
+// NewConn - function for opening new SQL connection
 func NewConn(dsn string) (*sql.DB, error) {
 	conn, err := sql.Open("pgx", dsn)
 	if err != nil {

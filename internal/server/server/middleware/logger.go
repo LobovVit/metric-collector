@@ -1,11 +1,13 @@
+// Package middleware - included middleware for http handlers
 package middleware
 
 import (
 	"net/http"
 	"time"
 
-	"github.com/LobovVit/metric-collector/pkg/logger"
 	"go.uber.org/zap"
+
+	"github.com/LobovVit/metric-collector/pkg/logger"
 )
 
 type (
@@ -30,6 +32,7 @@ func (r *loggingResponseWriter) Write(b []byte) (int, error) {
 	return size, err
 }
 
+// WithLogging - middleware for logging requests
 func WithLogging(h http.Handler) http.Handler {
 	logFn := func(w http.ResponseWriter, r *http.Request) {
 		start := time.Now()

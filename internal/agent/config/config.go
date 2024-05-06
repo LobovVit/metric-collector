@@ -1,3 +1,4 @@
+// Package config - included struct and init function fow work with app configuration
 package config
 
 import (
@@ -7,6 +8,7 @@ import (
 	"github.com/caarlos0/env/v6"
 )
 
+// Config determines the basic parameters of the agent's operation
 type Config struct {
 	Host           string `env:"ADDRESS"`
 	ReportInterval int64  `env:"REPORT_INTERVAL"`
@@ -14,10 +16,11 @@ type Config struct {
 	LogLevel       string `env:"LOG_LEVEL"`
 	ReportFormat   string `env:"REPORT_FORMAT"`
 	SigningKey     string `env:"KEY"`
-	RateLimit      int64  `env:"RATE_LIMIT"`
+	RateLimit      int    `env:"RATE_LIMIT"`
 	MaxCntInBatch  int    `env:"BATCH_LIMIT"`
 }
 
+// GetConfig - method creates a new configuration and sets values from environment variables and command line flags
 func GetConfig() (*Config, error) {
 	config := &Config{}
 	err := env.Parse(config)
@@ -32,7 +35,7 @@ func GetConfig() (*Config, error) {
 	reportFormat := flag.String("f", "batch", "формат передачи метрик json/text/batch")
 	maxCntInBatch := flag.Int("m", 5, "максимальное количество метрик в батче")
 	signingKey := flag.String("k", "", "ключ")
-	rateLimit := flag.Int64("l", 10, "максимальное кол-во одновременно исходящих запросов на сервер")
+	rateLimit := flag.Int("l", 10, "максимальное кол-во одновременно исходящих запросов на сервер")
 	flag.Parse()
 
 	if config.ReportFormat == "" {

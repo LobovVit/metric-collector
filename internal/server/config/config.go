@@ -1,3 +1,4 @@
+// Package config - included struct and init function fow work with app configuration
 package config
 
 import (
@@ -8,6 +9,7 @@ import (
 	"github.com/caarlos0/env/v6"
 )
 
+// Config determines the basic parameters of the agent's operation
 type Config struct {
 	Host            string `env:"ADDRESS"`
 	LogLevel        string `env:"LOG_LEVEL"`
@@ -18,6 +20,7 @@ type Config struct {
 	SigningKey      string `env:"KEY"`
 }
 
+// GetConfig - method creates a new configuration and sets values from environment variables and command line flags
 func GetConfig() (*Config, error) {
 	config := &Config{}
 	err := env.Parse(config)

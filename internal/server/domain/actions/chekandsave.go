@@ -1,3 +1,4 @@
+// Package actions - contains methods for working with abstract storage
 package actions
 
 import (
@@ -5,10 +6,11 @@ import (
 	"fmt"
 	"strconv"
 
+	"go.uber.org/zap"
+
 	"github.com/LobovVit/metric-collector/internal/server/domain/metrics"
 	"github.com/LobovVit/metric-collector/pkg/logger"
 	"github.com/LobovVit/metric-collector/pkg/retry"
-	"go.uber.org/zap"
 )
 
 type badRequestErr struct {
@@ -20,31 +22,26 @@ func (e badRequestErr) Error() string {
 	return fmt.Sprintf("bad request metric type:\"%v\" with value:\"%v\"", e.tp, e.value)
 }
 
+// CheckAndSaveText - method checks and writes values to storage using string params
 func (r *Repo) CheckAndSaveText(ctx context.Context, tp string, name string, value string) error {
-	var ret error
-	try := retry.New(3)
 	switch tp {
 	case "gauge":
 		v, err := strconv.ParseFloat(value, 64)
 		if err != nil {
 			return badRequestErr{tp, value}
 		}
-		for {
-			ret = r.storage.SetGauge(ctx, name, v)
-			if ret == nil || !r.storage.IsRetryable(ret) || !try.Run() {
-				break
-			}
+		err = retry.DoTwoParams(ctx, 3, r.storage.SetGauge, name, v, r.storage.IsRetryable)
+		if err != nil {
+			return err
 		}
 	case "counter":
 		v, err := strconv.ParseInt(value, 10, 64)
 		if err != nil {
 			return badRequestErr{tp, value}
 		}
-		for {
-			ret = r.storage.SetCounter(ctx, name, v)
-			if ret == nil || !r.storage.IsRetryable(ret) || !try.Run() {
-				break
-			}
+		err = retry.DoTwoParams(ctx, 3, r.storage.SetCounter, name, v, r.storage.IsRetryable)
+		if err != nil {
+			return err
 		}
 	default:
 		return badRequestErr{tp, value}
@@ -55,26 +52,21 @@ func (r *Repo) CheckAndSaveText(ctx context.Context, tp string, name string, val
 			logger.Log.Error("Immediately save failed", zap.Error(err))
 		}
 	}
-	return ret
+	return nil
 }
 
+// CheckAndSaveStruct - method checks and writes values to storage using struct param
 func (r *Repo) CheckAndSaveStruct(ctx context.Context, metrics metrics.Metrics) (metrics.Metrics, error) {
-	var ret error
-	try := retry.New(3)
 	switch metrics.MType {
 	case "gauge":
-		for {
-			ret = r.storage.SetGauge(ctx, metrics.ID, *metrics.Value)
-			if ret == nil || !r.storage.IsRetryable(ret) || !try.Run() {
-				break
-			}
+		err := retry.DoTwoParams(ctx, 3, r.storage.SetGauge, metrics.ID, *metrics.Value, r.storage.IsRetryable)
+		if err != nil {
+			return metrics, err
 		}
 	case "counter":
-		for {
-			ret = r.storage.SetCounter(ctx, metrics.ID, *metrics.Delta)
-			if ret == nil || !r.storage.IsRetryable(ret) || !try.Run() {
-				break
-			}
+		err := retry.DoTwoParams(ctx, 3, r.storage.SetCounter, metrics.ID, *metrics.Delta, r.storage.IsRetryable)
+		if err != nil {
+			return metrics, err
 		}
 		tmp, _ := r.storage.GetSingle(ctx, metrics.MType, metrics.ID)
 		*metrics.Delta, _ = strconv.ParseInt(tmp, 10, 64)
@@ -87,23 +79,20 @@ func (r *Repo) CheckAndSaveStruct(ctx context.Context, metrics metrics.Metrics) 
 			logger.Log.Error("Immediately save failed", zap.Error(err))
 		}
 	}
-	return metrics, ret
+	return metrics, nil
 }
 
+// CheckAndSaveBatch - method checks and writes array of values to storage
 func (r *Repo) CheckAndSaveBatch(ctx context.Context, metrics []metrics.Metrics) ([]metrics.Metrics, error) {
-	try := retry.New(3)
-	var ret error
-	for {
-		ret = r.storage.SetBatch(ctx, metrics)
-		if ret == nil || !r.storage.IsRetryable(ret) || !try.Run() {
-			break
-		}
+	err := retry.Do(ctx, 3, r.storage.SetBatch, metrics, r.storage.IsRetryable)
+	if err != nil {
+		return metrics, err
 	}
 	if r.needImmediatelySave {
-		err := r.SaveToFile(ctx)
+		err = r.SaveToFile(ctx)
 		if err != nil {
 			logger.Log.Error("Immediately save failed", zap.Error(err))
 		}
 	}
-	return metrics, ret
+	return metrics, nil
 }

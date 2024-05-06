@@ -1,23 +1,27 @@
+// Package server - included methods for running the http server, register handlers and middleware, and their implementation
 package server
 
 import (
 	"context"
 	"net/http"
 
+	"github.com/go-chi/chi/v5"
+	"go.uber.org/zap"
+	"golang.org/x/sync/errgroup"
+
 	"github.com/LobovVit/metric-collector/internal/server/config"
 	"github.com/LobovVit/metric-collector/internal/server/domain/actions"
 	"github.com/LobovVit/metric-collector/internal/server/server/middleware"
 	"github.com/LobovVit/metric-collector/pkg/logger"
-	"github.com/go-chi/chi/v5"
-	"go.uber.org/zap"
-	"golang.org/x/sync/errgroup"
 )
 
+// Server - structure containing a server instance
 type Server struct {
 	config  *config.Config
 	storage actions.Repo
 }
 
+// New - method to create server instance
 func New(ctx context.Context, config *config.Config) (*Server, error) {
 	repo, err := actions.GetRepo(ctx, config)
 	if err != nil {
@@ -26,9 +30,11 @@ func New(ctx context.Context, config *config.Config) (*Server, error) {
 	return &Server{config: config, storage: repo}, nil
 }
 
+// Run - method to start server instance
 func (a *Server) Run(ctx context.Context) error {
 
 	mux := chi.NewRouter()
+
 	mux.Use(middleware.WithLogging)
 	mux.Use(middleware.WithSignature(a.config.SigningKey))
 	mux.Use(middleware.WithCompress)
@@ -64,6 +70,7 @@ func (a *Server) Run(ctx context.Context) error {
 	return nil
 }
 
+// RouterShutdown - method that implements saving the server state when shutting down
 func (a *Server) RouterShutdown(ctx context.Context) {
 	err := a.storage.SaveToFile(ctx)
 	if err != nil {
