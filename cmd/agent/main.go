@@ -12,8 +12,17 @@ import (
 	"github.com/LobovVit/metric-collector/pkg/logger"
 )
 
+var (
+	buildVersion = "N/A"
+	buildDate    = "N/A"
+	buildCommit  = "N/A"
+)
+
 // main - function that is executed at startup and is the entry point to the program
 func main() {
+	fmt.Printf("Build version: %s\n", buildVersion)
+	fmt.Printf("Build date: %s\n", buildDate)
+	fmt.Printf("Build commit: %s\n", buildCommit)
 	if err := run(context.Background()); err != nil {
 		panic(err)
 	}
