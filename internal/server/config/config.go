@@ -18,6 +18,7 @@ type Config struct {
 	Restore         bool   `env:"RESTORE"`
 	DSN             string `env:"DATABASE_DSN"`
 	SigningKey      string `env:"KEY"`
+	CryptoKey       string `env:"CRYPTO_KEY"`
 }
 
 // GetConfig - method creates a new configuration and sets values from environment variables and command line flags
@@ -35,6 +36,7 @@ func GetConfig() (*Config, error) {
 	restore := flag.Bool("r", true, "загружать при старте данные из файла")
 	dsn := flag.String("d", "", "строка подключения к БД") //postgresql://postgres:password@10.66.66.3:5432/postgres?sslmode=disable
 	signingKey := flag.String("k", "", "ключ")
+	cryptoKey := flag.String("crypto-key", "private.pem", "путь до файла с закрытым ключом")
 	flag.Parse()
 
 	if config.Host == "" {
@@ -59,6 +61,9 @@ func GetConfig() (*Config, error) {
 	}
 	if config.SigningKey == "" {
 		config.SigningKey = *signingKey
+	}
+	if config.CryptoKey == "" {
+		config.CryptoKey = *cryptoKey
 	}
 	return config, nil
 }

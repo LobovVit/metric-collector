@@ -18,6 +18,7 @@ type Config struct {
 	SigningKey     string `env:"KEY"`
 	RateLimit      int    `env:"RATE_LIMIT"`
 	MaxCntInBatch  int    `env:"BATCH_LIMIT"`
+	CryptoKey      string `env:"CRYPTO_KEY"`
 }
 
 // GetConfig - method creates a new configuration and sets values from environment variables and command line flags
@@ -36,6 +37,7 @@ func GetConfig() (*Config, error) {
 	maxCntInBatch := flag.Int("m", 5, "максимальное количество метрик в батче")
 	signingKey := flag.String("k", "", "ключ")
 	rateLimit := flag.Int("l", 10, "максимальное кол-во одновременно исходящих запросов на сервер")
+	cryptoKey := flag.String("crypto-key", "public.pem", "путь до файла с публичным ключом")
 	flag.Parse()
 
 	if config.ReportFormat == "" {
@@ -67,6 +69,9 @@ func GetConfig() (*Config, error) {
 	}
 	if config.MaxCntInBatch == 0 {
 		config.MaxCntInBatch = *maxCntInBatch
+	}
+	if config.CryptoKey == "" {
+		config.CryptoKey = *cryptoKey
 	}
 
 	return config, nil

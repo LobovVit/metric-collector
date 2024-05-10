@@ -38,6 +38,9 @@ func (a *Server) Run(ctx context.Context) error {
 	mux.Use(middleware.WithLogging)
 	mux.Use(middleware.WithSignature(a.config.SigningKey))
 	mux.Use(middleware.WithCompress)
+	if a.config.CryptoKey != "" {
+		mux.Use(middleware.RsaMiddleware(a.config.CryptoKey))
+	}
 
 	mux.Get("/", a.allMetricsHandler)
 	mux.Get("/ping", a.dbPingHandler)
