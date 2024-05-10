@@ -31,6 +31,7 @@ func TestGetConfig(t *testing.T) {
 			SigningKey:     "",
 			RateLimit:      10,
 			MaxCntInBatch:  5,
+			CryptoKey:      "public.pem",
 		}, wantErr: false},
 	}
 	for _, tt := range tests {

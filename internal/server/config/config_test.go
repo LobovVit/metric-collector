@@ -20,6 +20,7 @@ func TestGetConfig(t *testing.T) {
 			Restore:         true,
 			DSN:             "",
 			SigningKey:      "",
+			CryptoKey:       "private.pem",
 		}, wantErr: false},
 	}
 	for _, tt := range tests {
