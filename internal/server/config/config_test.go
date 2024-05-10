@@ -32,6 +32,7 @@ func TestGetConfig(t *testing.T) {
 			t.Setenv("RESTORE", strconv.FormatBool(tt.want.Restore))
 			t.Setenv("DATABASE_DSN", tt.want.SigningKey)
 			t.Setenv("KEY", tt.want.SigningKey)
+			t.Setenv("CRYPTO_KEY", tt.want.CryptoKey)
 			got, err := GetConfig()
 			if (err != nil) != tt.wantErr {
 				t.Errorf("GetConfig() error = %v, wantErr %v", err, tt.wantErr)

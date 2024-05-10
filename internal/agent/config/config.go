@@ -37,7 +37,7 @@ func GetConfig() (*Config, error) {
 	maxCntInBatch := flag.Int("m", 5, "максимальное количество метрик в батче")
 	signingKey := flag.String("k", "", "ключ")
 	rateLimit := flag.Int("l", 10, "максимальное кол-во одновременно исходящих запросов на сервер")
-	cryptoKey := flag.String("crypto-key", "public.pem", "путь до файла с публичным ключом")
+	cryptoKey := flag.String("crypto-key", "", "путь до файла с публичным ключом") //public.pem
 	flag.Parse()
 
 	if config.ReportFormat == "" {

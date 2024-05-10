@@ -36,7 +36,7 @@ func GetConfig() (*Config, error) {
 	restore := flag.Bool("r", true, "загружать при старте данные из файла")
 	dsn := flag.String("d", "", "строка подключения к БД") //postgresql://postgres:password@10.66.66.3:5432/postgres?sslmode=disable
 	signingKey := flag.String("k", "", "ключ")
-	cryptoKey := flag.String("crypto-key", "private.pem", "путь до файла с закрытым ключом")
+	cryptoKey := flag.String("crypto-key", "", "путь до файла с закрытым ключом") //private.pem
 	flag.Parse()
 
 	if config.Host == "" {
