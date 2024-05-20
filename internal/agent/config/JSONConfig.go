@@ -32,12 +32,6 @@ func parseJSONConfig(config Config) (*Config, error) {
 
 	if config.Host == "" && cfgJSON.Address != "" {
 		config.Host = cfgJSON.Address
-		if config.ReportFormat != "batch" {
-			config.Host = "http://" + config.Host + "/update/"
-		}
-		if config.ReportFormat == "batch" {
-			config.Host = "http://" + config.Host + "/updates/"
-		}
 	}
 
 	if config.CryptoKey == "" {

@@ -91,5 +91,15 @@ func GetConfig() (*Config, error) {
 	if err != nil {
 		log.Printf("parseJSONConfig: %v", err)
 	}
+
+	if config.Host != "" {
+		if config.ReportFormat != "batch" {
+			config.Host = "http://" + config.Host + "/update/"
+		}
+		if config.ReportFormat == "batch" {
+			config.Host = "http://" + config.Host + "/updates/"
+		}
+	}
+
 	return config, nil
 }
