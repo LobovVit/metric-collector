@@ -30,7 +30,7 @@ func GetConfig() (*Config, error) {
 		return nil, fmt.Errorf("env parse: %w", err)
 	}
 
-	host := flag.String("a", "", "адрес эндпоинта HTTP-сервера")                  //localhost:8080
+	host := flag.String("a", "localhost:8080", "адрес эндпоинта HTTP-сервера")    //localhost:8080
 	reportInterval := flag.Int64("r", 10, "частота отправки метрик на сервер")    //10
 	pollInterval := flag.Int64("p", 2, "частота опроса метрик из пакета runtime") //2
 	logLevel := flag.String("log", "info", "log level")
