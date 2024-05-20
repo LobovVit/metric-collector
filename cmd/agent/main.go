@@ -37,7 +37,7 @@ func run(ctx context.Context) error {
 	if err := logger.Initialize(cfg.LogLevel); err != nil {
 		return fmt.Errorf("log initialize: %w", err)
 	}
-	ctx, cancel := signal.NotifyContext(ctx, syscall.SIGINT, syscall.SIGHUP, syscall.SIGTERM, syscall.SIGABRT)
+	ctx, cancel := signal.NotifyContext(ctx, syscall.SIGTERM, syscall.SIGINT, syscall.SIGQUIT, syscall.SIGHUP, syscall.SIGABRT)
 	defer cancel()
 	agent := app.New(cfg)
 	return agent.Run(ctx)
