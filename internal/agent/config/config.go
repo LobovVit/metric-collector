@@ -32,8 +32,8 @@ func GetConfig() (*Config, error) {
 	}
 
 	host := flag.String("a", "", "адрес эндпоинта HTTP-сервера")                  //localhost:8080
-	reportInterval := flag.Int64("r", 0, "частота отправки метрик на сервер")     //10
-	pollInterval := flag.Int64("p", 0, "частота опроса метрик из пакета runtime") //2
+	reportInterval := flag.Int64("r", 10, "частота отправки метрик на сервер")    //10
+	pollInterval := flag.Int64("p", 2, "частота опроса метрик из пакета runtime") //2
 	logLevel := flag.String("log", "info", "log level")
 	reportFormat := flag.String("f", "batch", "формат передачи метрик json/text/batch")
 	maxCntInBatch := flag.Int("m", 5, "максимальное количество метрик в батче")
@@ -41,7 +41,7 @@ func GetConfig() (*Config, error) {
 	rateLimit := flag.Int("l", 10, "максимальное кол-во одновременно исходящих запросов на сервер")
 	cryptoKey := flag.String("crypto-key", "", "путь до файла с публичным ключом") //public.pem
 	configPath1 := flag.String("config", "", "файл с JSON конфигом")
-	configPath2 := flag.String("c", "/Users/vitaly/Dev/projects/YA-GO/metric-collector/arn.json", "файл с JSON конфигом")
+	configPath2 := flag.String("c", "", "файл с JSON конфигом")
 	flag.Parse()
 
 	if config.ConfigPath == "" {

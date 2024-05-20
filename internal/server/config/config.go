@@ -33,7 +33,7 @@ func GetConfig() (*Config, error) {
 
 	host := flag.String("a", "localhost:8080", "адрес эндпоинта HTTP-сервера")
 	logLevel := flag.String("l", "info", "log level")
-	storeInterval := flag.Int("i", 0, "интервал сохранения на диск")
+	storeInterval := flag.Int("i", 30, "интервал сохранения на диск")
 	fileStoragePath := flag.String("f", "/tmp/metrics-db.json", "файл для сохранения на диск")
 	restore := flag.Bool("r", false, "загружать при старте данные из файла")
 	dsn := flag.String("d", "", "строка подключения к БД") //postgresql://postgres:password@10.66.66.3:5432/postgres?sslmode=disable
