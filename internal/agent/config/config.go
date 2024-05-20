@@ -4,7 +4,6 @@ package config
 import (
 	"flag"
 	"fmt"
-	"log"
 
 	"github.com/caarlos0/env/v6"
 )
@@ -81,10 +80,10 @@ func GetConfig() (*Config, error) {
 		config.CryptoKey = *cryptoKey
 	}
 
-	config, err = parseJSONConfig(*config)
-	if err != nil {
-		log.Printf("parseJSONConfig: %v", err)
-	}
+	//config, err = parseJSONConfig(*config)
+	//if err != nil {
+	//	log.Printf("parseJSONConfig: %v", err)
+	//}
 
 	if config.Host != "" {
 		if config.ReportFormat != "batch" {
