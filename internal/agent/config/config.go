@@ -59,12 +59,6 @@ func GetConfig() (*Config, error) {
 	if config.Host == "" {
 		config.Host = *host
 	}
-	if config.Host != "" && config.ReportFormat != "batch" {
-		config.Host = "http://" + config.Host + "/update/"
-	}
-	if config.Host != "" && config.ReportFormat == "batch" {
-		config.Host = "http://" + config.Host + "/updates/"
-	}
 	if config.ReportInterval == 0 {
 		config.ReportInterval = *reportInterval
 	}
