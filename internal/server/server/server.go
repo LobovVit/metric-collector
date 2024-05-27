@@ -5,6 +5,7 @@ import (
 	"context"
 	"net/http"
 
+	cryptorsa "github.com/LobovVit/metric-collector/pkg/crypto"
 	"github.com/go-chi/chi/v5"
 	"go.uber.org/zap"
 	"golang.org/x/sync/errgroup"
@@ -39,7 +40,11 @@ func (a *Server) Run(ctx context.Context) error {
 	mux.Use(middleware.WithSignature(a.config.SigningKey))
 	mux.Use(middleware.WithCompress)
 	if a.config.CryptoKey != "" {
-		mux.Use(middleware.RsaMiddleware(a.config.CryptoKey))
+		priv, err := cryptorsa.LoadPrivateKey(a.config.CryptoKey)
+		if err != nil {
+			mux.Use(middleware.RsaBad(err))
+		}
+		mux.Use(middleware.Rsa(priv))
 	}
 
 	mux.Get("/", a.allMetricsHandler)
@@ -61,13 +66,13 @@ func (a *Server) Run(ctx context.Context) error {
 	g.Go(func() error {
 		return httpServer.ListenAndServe()
 	})
-	g.Go(func() error {
-		<-ctx.Done()
-		return httpServer.Shutdown(ctx)
-	})
 
 	if err := g.Wait(); err != nil {
 		logger.Log.Info("Shutdown", zap.Error(err))
+		err = httpServer.Shutdown(ctx)
+		if err != nil {
+			logger.Log.Error("http server shutdown:", zap.Error(err))
+		}
 		a.RouterShutdown(ctx)
 	}
 	return nil
