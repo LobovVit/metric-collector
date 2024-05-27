@@ -64,36 +64,35 @@ func (a *Server) Run(ctx context.Context) error {
 		Handler: mux,
 	}
 
-	shutdownCtx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
-	defer cancel()
-
 	g := errgroup.Group{}
 	g.Go(func() error {
 		return httpServer.ListenAndServe()
 	})
 	g.Go(func() error {
 		<-ctx.Done()
-		a.Shutdown(shutdownCtx, httpServer)
+		a.Shutdown(httpServer)
 		return http.ErrServerClosed
 	})
 
 	if err := g.Wait(); err != nil && !errors.Is(err, http.ErrServerClosed) {
 		logger.Log.Info("Shutdown on error", zap.Error(err))
-		a.Shutdown(shutdownCtx, httpServer)
+		a.Shutdown(httpServer)
 	}
 	return nil
 }
 
 // Shutdown - method that implements saving the server state when shutting down
-func (a *Server) Shutdown(ctx context.Context, srv *http.Server) {
-	err := srv.Shutdown(ctx)
+func (a *Server) Shutdown(srv *http.Server) {
+	shutdownCtx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
+	defer cancel()
+	err := srv.Shutdown(shutdownCtx)
 	if err != nil {
 		logger.Log.Error("http server shutdown:", zap.Error(err))
 	}
 	if err == nil {
 		logger.Log.Info("http server shutdown ok")
 	}
-	err = a.storage.SaveToFile(ctx)
+	err = a.storage.SaveToFile(shutdownCtx)
 	if err != nil {
 		logger.Log.Error("Save to file:", zap.Error(err))
 	}
