@@ -64,7 +64,7 @@ func (a *Server) Run(ctx context.Context) error {
 		Handler: mux,
 	}
 
-	shutdownCtx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	shutdownCtx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
 
 	g := errgroup.Group{}
@@ -88,7 +88,7 @@ func (a *Server) Run(ctx context.Context) error {
 func (a *Server) Shutdown(ctx context.Context, srv *http.Server) {
 	err := srv.Shutdown(ctx)
 	if err != nil {
-		logger.Log.Error("Shutdown:", zap.Error(err))
+		logger.Log.Error("http server shutdown:", zap.Error(err))
 	}
 	if err == nil {
 		logger.Log.Info("http server shutdown ok")
