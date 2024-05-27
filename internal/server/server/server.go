@@ -3,7 +3,9 @@ package server
 
 import (
 	"context"
+	"errors"
 	"net/http"
+	"time"
 
 	cryptorsa "github.com/LobovVit/metric-collector/pkg/crypto"
 	"github.com/go-chi/chi/v5"
@@ -62,26 +64,41 @@ func (a *Server) Run(ctx context.Context) error {
 		Handler: mux,
 	}
 
+	shutdownCtx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
 	g := errgroup.Group{}
 	g.Go(func() error {
 		return httpServer.ListenAndServe()
 	})
+	g.Go(func() error {
+		<-ctx.Done()
+		a.Shutdown(shutdownCtx, httpServer)
+		return http.ErrServerClosed
+	})
 
-	if err := g.Wait(); err != nil {
-		logger.Log.Info("Shutdown", zap.Error(err))
-		err = httpServer.Shutdown(ctx)
-		if err != nil {
-			logger.Log.Error("http server shutdown:", zap.Error(err))
-		}
-		a.RouterShutdown(ctx)
+	if err := g.Wait(); err != nil && !errors.Is(err, http.ErrServerClosed) {
+		logger.Log.Info("Shutdown on error", zap.Error(err))
+		a.Shutdown(shutdownCtx, httpServer)
 	}
 	return nil
 }
 
-// RouterShutdown - method that implements saving the server state when shutting down
-func (a *Server) RouterShutdown(ctx context.Context) {
-	err := a.storage.SaveToFile(ctx)
+// Shutdown - method that implements saving the server state when shutting down
+func (a *Server) Shutdown(ctx context.Context, srv *http.Server) {
+	err := srv.Shutdown(ctx)
 	if err != nil {
-		logger.Log.Error("Save to file failed", zap.Error(err))
+		logger.Log.Error("Shutdown:", zap.Error(err))
 	}
+	if err == nil {
+		logger.Log.Info("http server shutdown ok")
+	}
+	err = a.storage.SaveToFile(ctx)
+	if err != nil {
+		logger.Log.Error("Save to file:", zap.Error(err))
+	}
+	if err == nil {
+		logger.Log.Info("Save to file ok")
+	}
+
 }
