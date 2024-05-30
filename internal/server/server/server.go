@@ -3,7 +3,9 @@ package server
 
 import (
 	"context"
+	"errors"
 	"net/http"
+	"sync"
 	"time"
 
 	cryptorsa "github.com/LobovVit/metric-collector/pkg/crypto"
@@ -21,6 +23,7 @@ import (
 type Server struct {
 	config  *config.Config
 	storage actions.Repo
+	wg      sync.WaitGroup
 }
 
 // New - method to create server instance
@@ -65,12 +68,8 @@ func (a *Server) Run(ctx context.Context) error {
 
 	go (func() {
 		<-ctx.Done()
-		shutdownCtx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
-		defer cancel()
-		err := httpServer.Shutdown(shutdownCtx)
-		if err != nil {
-			return
-		}
+		a.wg.Add(1)
+		a.Shutdown(httpServer)
 	})()
 
 	g := errgroup.Group{}
@@ -78,9 +77,11 @@ func (a *Server) Run(ctx context.Context) error {
 		return httpServer.ListenAndServe()
 	})
 
-	if err := g.Wait(); err != nil {
-		a.Shutdown(httpServer)
+	if err := g.Wait(); err != nil && !errors.Is(err, http.ErrServerClosed) {
+		ctx.Done()
 	}
+
+	a.wg.Wait()
 	return nil
 }
 
@@ -102,5 +103,5 @@ func (a *Server) Shutdown(srv *http.Server) {
 	if err == nil {
 		logger.Log.Info("Save to file ok")
 	}
-
+	a.wg.Done()
 }
