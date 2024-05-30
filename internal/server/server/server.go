@@ -3,7 +3,6 @@ package server
 
 import (
 	"context"
-	"errors"
 	"net/http"
 	"time"
 
@@ -64,18 +63,22 @@ func (a *Server) Run(ctx context.Context) error {
 		Handler: mux,
 	}
 
+	go (func() {
+		<-ctx.Done()
+		shutdownCtx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
+		defer cancel()
+		err := httpServer.Shutdown(shutdownCtx)
+		if err != nil {
+			return
+		}
+	})()
+
 	g := errgroup.Group{}
 	g.Go(func() error {
 		return httpServer.ListenAndServe()
 	})
-	g.Go(func() error {
-		<-ctx.Done()
-		a.Shutdown(httpServer)
-		return http.ErrServerClosed
-	})
 
-	if err := g.Wait(); err != nil && !errors.Is(err, http.ErrServerClosed) {
-		logger.Log.Info("Shutdown on error", zap.Error(err))
+	if err := g.Wait(); err != nil {
 		a.Shutdown(httpServer)
 	}
 	return nil
