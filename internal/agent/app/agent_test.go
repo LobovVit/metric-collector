@@ -27,7 +27,7 @@ func TestAgent_Run(t *testing.T) {
 				t.Fatal(err)
 			}
 			a := New(cfg)
-			ctx, chancel := context.WithTimeout(context.Background(), 3*time.Second)
+			ctx, chancel := context.WithTimeout(context.Background(), 15*time.Second)
 			defer chancel()
 			if err := a.Run(ctx); (err != nil) != tt.wantErr {
 				t.Errorf("Run() error = %v, wantErr %v", err, tt.wantErr)

@@ -3,8 +3,11 @@ package server
 
 import (
 	"context"
+	"errors"
 	"net/http"
+	"time"
 
+	cryptorsa "github.com/LobovVit/metric-collector/pkg/crypto"
 	"github.com/go-chi/chi/v5"
 	"go.uber.org/zap"
 	"golang.org/x/sync/errgroup"
@@ -19,6 +22,7 @@ import (
 type Server struct {
 	config  *config.Config
 	storage actions.Repo
+	//wg      sync.WaitGroup
 }
 
 // New - method to create server instance
@@ -38,6 +42,13 @@ func (a *Server) Run(ctx context.Context) error {
 	mux.Use(middleware.WithLogging)
 	mux.Use(middleware.WithSignature(a.config.SigningKey))
 	mux.Use(middleware.WithCompress)
+	if a.config.CryptoKey != "" {
+		priv, err := cryptorsa.LoadPrivateKey(a.config.CryptoKey)
+		if err != nil {
+			mux.Use(middleware.RsaBad(err))
+		}
+		mux.Use(middleware.Rsa(priv))
+	}
 
 	mux.Get("/", a.allMetricsHandler)
 	mux.Get("/ping", a.dbPingHandler)
@@ -54,26 +65,38 @@ func (a *Server) Run(ctx context.Context) error {
 		Handler: mux,
 	}
 
-	g := errgroup.Group{}
+	g, gCtx := errgroup.WithContext(ctx)
 	g.Go(func() error {
 		return httpServer.ListenAndServe()
 	})
 	g.Go(func() error {
-		<-ctx.Done()
-		return httpServer.Shutdown(ctx)
+		<-gCtx.Done()
+		a.Shutdown(httpServer)
+		return nil
 	})
 
-	if err := g.Wait(); err != nil {
-		logger.Log.Info("Shutdown", zap.Error(err))
-		a.RouterShutdown(ctx)
+	if err := g.Wait(); err != nil && !errors.Is(err, http.ErrServerClosed) { //
+		logger.Log.Error("http server:", zap.Error(err))
 	}
 	return nil
 }
 
-// RouterShutdown - method that implements saving the server state when shutting down
-func (a *Server) RouterShutdown(ctx context.Context) {
-	err := a.storage.SaveToFile(ctx)
+// Shutdown - method that implements saving the server state when shutting down
+func (a *Server) Shutdown(srv *http.Server) {
+	shutdownCtx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
+	defer cancel()
+	err := srv.Shutdown(shutdownCtx)
 	if err != nil {
-		logger.Log.Error("Save to file failed", zap.Error(err))
+		logger.Log.Error("http server shutdown:", zap.Error(err))
+	}
+	if err == nil {
+		logger.Log.Info("http server shutdown ok")
+	}
+	err = a.storage.SaveToFile(shutdownCtx)
+	if err != nil {
+		logger.Log.Error("Save to file:", zap.Error(err))
+	}
+	if err == nil {
+		logger.Log.Info("Save to file ok")
 	}
 }

@@ -31,6 +31,7 @@ func TestGetConfig(t *testing.T) {
 			SigningKey:     "",
 			RateLimit:      10,
 			MaxCntInBatch:  5,
+			CryptoKey:      "public.pem",
 		}, wantErr: false},
 	}
 	for _, tt := range tests {
@@ -43,6 +44,7 @@ func TestGetConfig(t *testing.T) {
 			t.Setenv("KEY", tt.cfg.SigningKey)
 			t.Setenv("RATE_LIMIT", strconv.Itoa(tt.cfg.RateLimit))
 			t.Setenv("BATCH_LIMIT", strconv.Itoa(tt.cfg.MaxCntInBatch))
+			t.Setenv("CRYPTO_KEY", tt.want.CryptoKey)
 			got, err := GetConfig()
 			if (err != nil) != tt.wantErr {
 				t.Errorf("GetConfig() error = %v, wantErr %v", err, tt.wantErr)

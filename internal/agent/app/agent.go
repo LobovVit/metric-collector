@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/LobovVit/metric-collector/pkg/compress"
+	cryptorsa "github.com/LobovVit/metric-collector/pkg/crypto"
 	"github.com/go-resty/resty/v2"
 	"go.uber.org/zap"
 	"golang.org/x/sync/errgroup"
@@ -159,6 +160,18 @@ func (a *Agent) sendSingleRequestJSON(ctx context.Context, singleMetric metrics.
 
 		return fmt.Errorf("marshal json: %w", err)
 	}
+
+	if a.cfg.CryptoKey != "" {
+		pub, err := cryptorsa.LoadPublicKey(a.cfg.CryptoKey)
+		if err != nil {
+			return fmt.Errorf("ParsePKCS1PublicKey: %w", err)
+		}
+		metric, err = cryptorsa.EncryptOAEP(pub, metric)
+		if err != nil {
+			return fmt.Errorf("EncryptOAEP: %w", err)
+		}
+	}
+
 	metric, err = compress.Compress(metric)
 	if err != nil {
 		return fmt.Errorf("compress json: %w", err)
@@ -210,6 +223,18 @@ func (a *Agent) sendSingleRequestBatchJSON(ctx context.Context, singlePartMetric
 	if err != nil {
 		return fmt.Errorf("marshal json: %w", err)
 	}
+
+	if a.cfg.CryptoKey != "" {
+		pub, err := cryptorsa.LoadPublicKey(a.cfg.CryptoKey)
+		if err != nil {
+			return fmt.Errorf("ParsePKCS1PublicKey: %w", err)
+		}
+		data, err = cryptorsa.EncryptOAEP(pub, data)
+		if err != nil {
+			return fmt.Errorf("EncryptOAEP: %w", err)
+		}
+	}
+
 	data, err = compress.Compress(data)
 	if err != nil {
 		return fmt.Errorf("compress json: %w", err)
