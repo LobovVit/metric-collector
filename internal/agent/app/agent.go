@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"net"
 	"strconv"
 	"sync"
 	"time"
@@ -29,7 +30,7 @@ type Agent struct {
 
 // New - method creates a new Agent.
 func New(config *config.Config) *Agent {
-	agent := Agent{cfg: config, client: resty.New()}
+	agent := Agent{cfg: config, client: resty.New().SetHeader("X-Real-IP", GetLocalIP())}
 	return &agent
 }
 
@@ -256,4 +257,20 @@ func (a *Agent) sendSingleRequestBatchJSON(ctx context.Context, singlePartMetric
 		return fmt.Errorf("send request json: %w", err)
 	}
 	return nil
+}
+
+// GetLocalIP returns the non loopback local IP of the host
+func GetLocalIP() string {
+	addrs, err := net.InterfaceAddrs()
+	if err != nil {
+		return ""
+	}
+	for _, address := range addrs {
+		if ipnet, ok := address.(*net.IPNet); ok && !ipnet.IP.IsLoopback() {
+			if ipnet.IP.To4() != nil {
+				return ipnet.IP.String()
+			}
+		}
+	}
+	return ""
 }

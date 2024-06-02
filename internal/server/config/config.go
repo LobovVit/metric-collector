@@ -21,6 +21,7 @@ type Config struct {
 	SigningKey      string `env:"KEY"`
 	CryptoKey       string `env:"CRYPTO_KEY"`
 	ConfigPath      string `env:"CONFIG"`
+	TrustedSubnet   string `env:"TRUSTED_SUBNET"`
 }
 
 // GetConfig - method creates a new configuration and sets values from environment variables and command line flags
@@ -41,6 +42,7 @@ func GetConfig() (*Config, error) {
 	cryptoKey := flag.String("crypto-key", "", "путь до файла с закрытым ключом") //private.pem
 	configPath1 := flag.String("config", "", "файл с JSON конфигом")
 	configPath2 := flag.String("c", "", "файл с JSON конфигом")
+	trustedSubnet := flag.String("t", "192.168.1.0/24", "доверенная подсеть")
 	flag.Parse()
 
 	if config.ConfigPath == "" {
@@ -77,6 +79,9 @@ func GetConfig() (*Config, error) {
 	}
 	if config.CryptoKey == "" {
 		config.CryptoKey = *cryptoKey
+	}
+	if config.TrustedSubnet == "" {
+		config.TrustedSubnet = *trustedSubnet
 	}
 
 	config, err = parseJSONConfig(*config)

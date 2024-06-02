@@ -4,7 +4,9 @@ package server
 import (
 	"context"
 	"errors"
+	"net"
 	"net/http"
+	"sync"
 	"time"
 
 	cryptorsa "github.com/LobovVit/metric-collector/pkg/crypto"
@@ -22,7 +24,7 @@ import (
 type Server struct {
 	config  *config.Config
 	storage actions.Repo
-	//wg      sync.WaitGroup
+	wg      sync.WaitGroup
 }
 
 // New - method to create server instance
@@ -50,6 +52,16 @@ func (a *Server) Run(ctx context.Context) error {
 		mux.Use(middleware.Rsa(priv))
 	}
 
+	if a.config.TrustedSubnet != "" {
+		_, inet, err := net.ParseCIDR(a.config.TrustedSubnet)
+		if err != nil {
+			logger.Log.Error("cidr parse:", zap.Error(err))
+		}
+		if err == nil {
+			mux.Use(middleware.WithCheckSubnet(inet))
+		}
+	}
+
 	mux.Get("/", a.allMetricsHandler)
 	mux.Get("/ping", a.dbPingHandler)
 	mux.Post("/value/", a.singleMetricJSONHandler)
@@ -69,20 +81,23 @@ func (a *Server) Run(ctx context.Context) error {
 	g.Go(func() error {
 		return httpServer.ListenAndServe()
 	})
-	g.Go(func() error {
+
+	a.wg.Add(1)
+	go (func() {
 		<-gCtx.Done()
 		a.Shutdown(httpServer)
-		return nil
-	})
+	})()
 
 	if err := g.Wait(); err != nil && !errors.Is(err, http.ErrServerClosed) { //
 		logger.Log.Error("http server:", zap.Error(err))
 	}
+	a.wg.Wait()
 	return nil
 }
 
 // Shutdown - method that implements saving the server state when shutting down
 func (a *Server) Shutdown(srv *http.Server) {
+	defer a.wg.Done()
 	shutdownCtx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
 	defer cancel()
 	err := srv.Shutdown(shutdownCtx)
