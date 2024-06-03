@@ -42,7 +42,7 @@ func GetConfig() (*Config, error) {
 	cryptoKey := flag.String("crypto-key", "", "путь до файла с закрытым ключом") //private.pem
 	configPath1 := flag.String("config", "", "файл с JSON конфигом")
 	configPath2 := flag.String("c", "", "файл с JSON конфигом")
-	trustedSubnet := flag.String("t", "192.168.1.0/24", "доверенная подсеть")
+	trustedSubnet := flag.String("t", "", "доверенная подсеть")
 	flag.Parse()
 
 	if config.ConfigPath == "" {
