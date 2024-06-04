@@ -17,7 +17,7 @@ import (
 func (a *Agent) sendRequestGrpc(ctx context.Context, metrics *metrics.Metrics) error {
 	conn, err := grpc.NewClient(":3200", grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
-		return err //TODO wrap
+		return err
 	}
 	defer conn.Close()
 	c := pb.NewUpdateServicesClient(conn)
