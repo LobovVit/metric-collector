@@ -15,7 +15,7 @@ import (
 )
 
 func (a *Agent) sendRequestGrpc(ctx context.Context, metrics *metrics.Metrics) error {
-	conn, err := grpc.NewClient(":3200", grpc.WithTransportCredentials(insecure.NewCredentials()))
+	conn, err := grpc.NewClient(a.cfg.HostGRPC, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
 		return fmt.Errorf("grpc new client: %w", err)
 	}
