@@ -12,6 +12,8 @@ import (
 // Config determines the basic parameters of the agent's operation
 type Config struct {
 	Host           string `env:"ADDRESS"`
+	HostGRPC       string `env:"GRPC_ADDRESS"`
+	Mode           string `env:"MODE"`
 	ReportInterval int64  `env:"REPORT_INTERVAL"`
 	PollInterval   int64  `env:"POLL_INTERVAL"`
 	LogLevel       string `env:"LOG_LEVEL"`
@@ -31,7 +33,9 @@ func GetConfig() (*Config, error) {
 		return nil, fmt.Errorf("env parse: %w", err)
 	}
 
-	host := flag.String("a", "localhost:8080", "адрес эндпоинта HTTP-сервера")    //localhost:8080
+	host := flag.String("a", "localhost:8080", "адрес эндпоинта HTTP-сервера") //localhost:8080
+	hostGRPC := flag.String("g", "localhost:3200", "адрес эндпоинта grpc-сервера")
+	mode := flag.String("mode", "http", "режим работы http/grpc")
 	reportInterval := flag.Int64("r", 10, "частота отправки метрик на сервер")    //10
 	pollInterval := flag.Int64("p", 2, "частота опроса метрик из пакета runtime") //2
 	logLevel := flag.String("log", "info", "log level")
@@ -58,6 +62,12 @@ func GetConfig() (*Config, error) {
 	}
 	if config.Host == "" {
 		config.Host = *host
+	}
+	if config.HostGRPC == "" {
+		config.HostGRPC = *hostGRPC
+	}
+	if config.Mode == "" {
+		config.Mode = *mode
 	}
 	if config.ReportInterval == 0 {
 		config.ReportInterval = *reportInterval

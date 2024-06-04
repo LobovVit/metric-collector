@@ -13,6 +13,7 @@ import (
 // Config determines the basic parameters of the agent's operation
 type Config struct {
 	Host            string `env:"ADDRESS"`
+	HostGRPC        string `env:"GRPC_ADDRESS"`
 	LogLevel        string `env:"LOG_LEVEL"`
 	StoreInterval   int    `env:"STORE_INTERVAL"`
 	FileStoragePath string `env:"FILE_STORAGE_PATH" `
@@ -33,6 +34,7 @@ func GetConfig() (*Config, error) {
 	}
 
 	host := flag.String("a", "localhost:8080", "адрес эндпоинта HTTP-сервера")
+	hostGRPC := flag.String("g", "localhost:3200", "адрес эндпоинта grpc-сервера")
 	logLevel := flag.String("l", "info", "log level")
 	storeInterval := flag.Int("i", 30, "интервал сохранения на диск")
 	fileStoragePath := flag.String("f", "/tmp/metrics-db.json", "файл для сохранения на диск")
@@ -56,6 +58,9 @@ func GetConfig() (*Config, error) {
 
 	if config.Host == "" {
 		config.Host = *host
+	}
+	if config.HostGRPC == "" {
+		config.HostGRPC = *hostGRPC
 	}
 	if config.LogLevel == "" {
 		config.LogLevel = *logLevel

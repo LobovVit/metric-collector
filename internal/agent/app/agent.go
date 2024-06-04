@@ -10,16 +10,15 @@ import (
 	"sync"
 	"time"
 
+	"github.com/LobovVit/metric-collector/internal/agent/config"
+	"github.com/LobovVit/metric-collector/internal/agent/metrics"
 	"github.com/LobovVit/metric-collector/pkg/compress"
 	cryptorsa "github.com/LobovVit/metric-collector/pkg/crypto"
+	"github.com/LobovVit/metric-collector/pkg/logger"
+	"github.com/LobovVit/metric-collector/pkg/signature"
 	"github.com/go-resty/resty/v2"
 	"go.uber.org/zap"
 	"golang.org/x/sync/errgroup"
-
-	"github.com/LobovVit/metric-collector/internal/agent/config"
-	"github.com/LobovVit/metric-collector/internal/agent/metrics"
-	"github.com/LobovVit/metric-collector/pkg/logger"
-	"github.com/LobovVit/metric-collector/pkg/signature"
 )
 
 // Agent - struct is used to create Agent with settings.
@@ -66,14 +65,29 @@ func (a *Agent) Run(ctx context.Context) error {
 		for {
 			select {
 			case <-sendTicker.C:
-				tmp := m.CounterExecMemStats.Load()
-				err := a.sendRequestWithRetry(ctx, m)
-				m.CounterExecMemStats.Store(m.CounterExecMemStats.Load() - tmp)
-				if err != nil {
-					m.CounterExecMemStats.Store(tmp)
-					logger.Log.Error("Send request failed", zap.Error(err))
+				switch a.cfg.Mode {
+				case "grpc":
+					tmp := m.CounterExecMemStats.Load()
+					err := a.sendRequestGrpc(ctx, m)
+					m.CounterExecMemStats.Store(m.CounterExecMemStats.Load() - tmp)
+					if err != nil {
+						m.CounterExecMemStats.Store(tmp)
+						logger.Log.Error("Send request GRPC failed", zap.Error(err))
+					}
+					logger.Log.Info("Sent")
+				case "http":
+					tmp := m.CounterExecMemStats.Load()
+					err := a.sendRequestWithRetryHttp(ctx, m)
+					m.CounterExecMemStats.Store(m.CounterExecMemStats.Load() - tmp)
+					if err != nil {
+						m.CounterExecMemStats.Store(tmp)
+						logger.Log.Error("Send request HTTP failed", zap.Error(err))
+					}
+					logger.Log.Info("Sent")
+				default:
+					logger.Log.Info("Incorrect mode")
+					return
 				}
-				logger.Log.Info("Sent")
 			case <-ctx.Done():
 				logger.Log.Info("Shutdown")
 				return
@@ -84,7 +98,7 @@ func (a *Agent) Run(ctx context.Context) error {
 	return nil
 }
 
-func (a *Agent) sendRequestWithRetry(ctx context.Context, metrics *metrics.Metrics) error {
+func (a *Agent) sendRequestWithRetryHttp(ctx context.Context, metrics *metrics.Metrics) error {
 	a.client.SetRetryCount(3).SetRetryWaitTime(3 * time.Second)
 	return a.sendRequest(ctx, metrics)
 }
