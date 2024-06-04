@@ -16,7 +16,6 @@ import (
 	"go.uber.org/zap"
 	"golang.org/x/sync/errgroup"
 	"google.golang.org/grpc"
-	_ "google.golang.org/grpc"
 
 	"github.com/LobovVit/metric-collector/internal/server/config"
 	"github.com/LobovVit/metric-collector/internal/server/domain/actions"

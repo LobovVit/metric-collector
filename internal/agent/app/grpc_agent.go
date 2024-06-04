@@ -17,7 +17,7 @@ import (
 func (a *Agent) sendRequestGrpc(ctx context.Context, metrics *metrics.Metrics) error {
 	conn, err := grpc.NewClient(":3200", grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
-		return err
+		return fmt.Errorf("grpc new client: %w", err)
 	}
 	defer conn.Close()
 	c := pb.NewUpdateServicesClient(conn)
@@ -63,10 +63,10 @@ func (a *Agent) sendGrpcSingle(ctx context.Context, metric metrics.Metric, c pb.
 	}
 	resp, err := c.SingleMetric(ctx, &val)
 	if err != nil {
-		return err
+		return fmt.Errorf("grpc single metric: %w", err)
 	}
 	if resp.Error != "" {
-		return err
+		return fmt.Errorf("grpc single metric: %v", resp.Error)
 	}
 	return nil
 }
@@ -107,10 +107,10 @@ func (a *Agent) sendGrpcBatch(ctx context.Context, singlePartMetric []metrics.Me
 	}
 	resp, err := c.ButchMetrics(ctx, &val)
 	if err != nil {
-		return err
+		return fmt.Errorf("grpc batch: %w", err)
 	}
 	if resp.Error != "" {
-		return err
+		return fmt.Errorf("grpc batch: %v", resp.Error)
 	}
 	return nil
 }
