@@ -39,6 +39,9 @@ func run(ctx context.Context) error {
 	}
 	ctx, cancel := signal.NotifyContext(ctx, syscall.SIGTERM, syscall.SIGINT, syscall.SIGQUIT)
 	defer cancel()
-	agent := app.New(cfg)
+	agent, err := app.New(cfg)
+	if err != nil {
+		return err
+	}
 	return agent.Run(ctx)
 }

@@ -19,18 +19,35 @@ import (
 	"github.com/go-resty/resty/v2"
 	"go.uber.org/zap"
 	"golang.org/x/sync/errgroup"
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials/insecure"
 )
 
 // Agent - struct is used to create Agent with settings.
 type Agent struct {
-	cfg    *config.Config
-	client *resty.Client
+	cfg        *config.Config
+	client     *resty.Client
+	clientGRPC *grpc.ClientConn
 }
 
 // New - method creates a new Agent.
-func New(config *config.Config) *Agent {
-	agent := Agent{cfg: config, client: resty.New().SetHeader("X-Real-IP", GetLocalIP())}
-	return &agent
+func New(config *config.Config) (*Agent, error) {
+	agent := Agent{cfg: config}
+	switch config.Mode {
+	case "grpc":
+		var err error
+		agent.clientGRPC, err = grpc.NewClient(config.HostGRPC, grpc.WithTransportCredentials(insecure.NewCredentials()))
+		if err != nil {
+			logger.Log.Error("Grpc new client", zap.Error(err))
+			return nil, fmt.Errorf("grpc new client: %w", err)
+		}
+	case "http":
+		agent.client = resty.New().SetHeader("X-Real-IP", GetLocalIP())
+	default:
+		logger.Log.Error("Incorrect mode")
+		return nil, fmt.Errorf("Incorrect mode")
+	}
+	return &agent, nil
 }
 
 // Run - method starts an agent instance

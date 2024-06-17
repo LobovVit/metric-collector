@@ -5,22 +5,14 @@ import (
 	"fmt"
 
 	"github.com/LobovVit/metric-collector/internal/agent/metrics"
+	"github.com/LobovVit/metric-collector/internal/proto"
 	"github.com/LobovVit/metric-collector/pkg/logger"
 	"go.uber.org/zap"
 	"golang.org/x/sync/errgroup"
-	"google.golang.org/grpc"
-	"google.golang.org/grpc/credentials/insecure"
-
-	pb "github.com/LobovVit/metric-collector/proto"
 )
 
 func (a *Agent) sendRequestGrpc(ctx context.Context, metrics *metrics.Metrics) error {
-	conn, err := grpc.NewClient(a.cfg.HostGRPC, grpc.WithTransportCredentials(insecure.NewCredentials()))
-	if err != nil {
-		return fmt.Errorf("grpc new client: %w", err)
-	}
-	defer conn.Close()
-	c := pb.NewUpdateServicesClient(conn)
+	c := proto.NewUpdateServicesClient(a.clientGRPC)
 
 	metrics.RwMutex.RLock()
 	defer metrics.RwMutex.RUnlock()
@@ -37,7 +29,7 @@ func (a *Agent) sendRequestGrpc(ctx context.Context, metrics *metrics.Metrics) e
 	}
 }
 
-func (a *Agent) sendSingleParallel(ctx context.Context, metrics *metrics.Metrics, c pb.UpdateServicesClient) error {
+func (a *Agent) sendSingleParallel(ctx context.Context, metrics *metrics.Metrics, c proto.UpdateServicesClient) error {
 	g := errgroup.Group{}
 	g.SetLimit(a.cfg.RateLimit)
 	for _, v := range metrics.Metrics {
@@ -53,8 +45,8 @@ func (a *Agent) sendSingleParallel(ctx context.Context, metrics *metrics.Metrics
 	return nil
 }
 
-func (a *Agent) sendGrpcSingle(ctx context.Context, metric metrics.Metric, c pb.UpdateServicesClient) error {
-	val := pb.Metric{Id: metric.ID, Type: pb.MetricTypes(pb.MetricTypes_value[metric.MType])}
+func (a *Agent) sendGrpcSingle(ctx context.Context, metric metrics.Metric, c proto.UpdateServicesClient) error {
+	val := proto.Metric{Id: metric.ID, Type: proto.MetricTypes(proto.MetricTypes_value[metric.MType])}
 	switch metric.MType {
 	case "counter":
 		val.Delta = *metric.Delta
@@ -71,7 +63,7 @@ func (a *Agent) sendGrpcSingle(ctx context.Context, metric metrics.Metric, c pb.
 	return nil
 }
 
-func (a *Agent) sendBatchParallel(ctx context.Context, met *metrics.Metrics, c pb.UpdateServicesClient) error {
+func (a *Agent) sendBatchParallel(ctx context.Context, met *metrics.Metrics, c proto.UpdateServicesClient) error {
 	var maxPart = len(met.Metrics) / a.cfg.MaxCntInBatch
 	g := errgroup.Group{}
 	g.SetLimit(a.cfg.RateLimit)
@@ -93,10 +85,10 @@ func (a *Agent) sendBatchParallel(ctx context.Context, met *metrics.Metrics, c p
 	return nil
 }
 
-func (a *Agent) sendGrpcBatch(ctx context.Context, singlePartMetric []metrics.Metric, c pb.UpdateServicesClient) error {
-	val := pb.Metrics{}
+func (a *Agent) sendGrpcBatch(ctx context.Context, singlePartMetric []metrics.Metric, c proto.UpdateServicesClient) error {
+	val := proto.Metrics{}
 	for _, m := range singlePartMetric {
-		tmp := pb.Metric{Id: m.ID, Type: pb.MetricTypes(pb.MetricTypes_value[m.MType])}
+		tmp := proto.Metric{Id: m.ID, Type: proto.MetricTypes(proto.MetricTypes_value[m.MType])}
 		switch m.MType {
 		case "counter":
 			tmp.Delta = *m.Delta

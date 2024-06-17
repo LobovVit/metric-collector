@@ -10,6 +10,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/LobovVit/metric-collector/internal/proto"
 	"github.com/LobovVit/metric-collector/internal/server/domain/metrics"
 	cryptorsa "github.com/LobovVit/metric-collector/pkg/crypto"
 	"github.com/go-chi/chi/v5"
@@ -21,7 +22,6 @@ import (
 	"github.com/LobovVit/metric-collector/internal/server/domain/actions"
 	"github.com/LobovVit/metric-collector/internal/server/server/middleware"
 	"github.com/LobovVit/metric-collector/pkg/logger"
-	pb "github.com/LobovVit/metric-collector/proto"
 )
 
 // Server - structure containing a server instance
@@ -29,7 +29,7 @@ type Server struct {
 	config  *config.Config
 	storage actions.Repo
 	wg      sync.WaitGroup
-	pb.UnimplementedUpdateServicesServer
+	proto.UnimplementedUpdateServicesServer
 }
 
 // New - method to create server instance
@@ -85,7 +85,7 @@ func (a *Server) Run(ctx context.Context) error {
 		return fmt.Errorf("grpc listen: %w", err)
 	}
 	grpcServer := grpc.NewServer()
-	pb.RegisterUpdateServicesServer(grpcServer, a)
+	proto.RegisterUpdateServicesServer(grpcServer, a)
 
 	g, gCtx := errgroup.WithContext(ctx)
 	g.Go(func() error {
@@ -135,8 +135,8 @@ func (a *Server) Shutdown(srvHTTP *http.Server, srvGRPC *grpc.Server) {
 	}
 }
 
-func (a *Server) SingleMetric(ctx context.Context, in *pb.Metric) (*pb.Response, error) {
-	var response pb.Response
+func (a *Server) SingleMetric(ctx context.Context, in *proto.Metric) (*proto.Response, error) {
+	var response proto.Response
 	metric := metrics.Metrics{ID: in.Id, MType: in.Type.String(), Delta: &in.Delta, Value: &in.Value}
 	_, err := a.storage.CheckAndSaveStruct(ctx, metric)
 	if err != nil {
@@ -145,8 +145,8 @@ func (a *Server) SingleMetric(ctx context.Context, in *pb.Metric) (*pb.Response,
 	return &response, nil
 }
 
-func (a *Server) ButchMetrics(ctx context.Context, in *pb.Metrics) (*pb.Response, error) {
-	var response pb.Response
+func (a *Server) ButchMetrics(ctx context.Context, in *proto.Metrics) (*proto.Response, error) {
+	var response proto.Response
 	var sliceMetric []metrics.Metrics
 	for _, metric := range in.Metrics {
 		sliceMetric = append(sliceMetric, metrics.Metrics{ID: metric.Id, MType: metric.Type.String(), Delta: &metric.Delta, Value: &metric.Value})
