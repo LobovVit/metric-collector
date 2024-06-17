@@ -45,7 +45,7 @@ func New(config *config.Config) (*Agent, error) {
 		agent.client = resty.New().SetHeader("X-Real-IP", GetLocalIP())
 	default:
 		logger.Log.Error("Incorrect mode")
-		return nil, fmt.Errorf("Incorrect mode")
+		return nil, fmt.Errorf("incorrect mode")
 	}
 	return &agent, nil
 }
