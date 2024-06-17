@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/go-resty/resty/v2"
+	"google.golang.org/grpc"
 
 	"github.com/LobovVit/metric-collector/internal/agent/config"
 	"github.com/LobovVit/metric-collector/internal/agent/metrics"
@@ -26,7 +27,10 @@ func TestAgent_Run(t *testing.T) {
 			if err != nil {
 				t.Fatal(err)
 			}
-			a := New(cfg)
+			a, err := New(cfg)
+			if err != nil {
+				t.Fatal(err)
+			}
 			ctx, chancel := context.WithTimeout(context.Background(), 15*time.Second)
 			defer chancel()
 			if err := a.Run(ctx); (err != nil) != tt.wantErr {
@@ -38,8 +42,9 @@ func TestAgent_Run(t *testing.T) {
 
 func TestAgent_sendRequest(t *testing.T) {
 	type fields struct {
-		cfg    *config.Config
-		client *resty.Client
+		cfg        *config.Config
+		client     *resty.Client
+		clientGRPC *grpc.ClientConn
 	}
 	type args struct {
 		ctx     context.Context
@@ -51,9 +56,9 @@ func TestAgent_sendRequest(t *testing.T) {
 		args    args
 		wantErr bool
 	}{
-		{name: "test batch mode", fields: fields{cfg: &config.Config{ReportFormat: "batch", MaxCntInBatch: 10, RateLimit: 3}, client: resty.New()}, args: args{ctx: context.Background(), metrics: metrics.GetMetricStruct()}, wantErr: false},
-		{name: "test json mode", fields: fields{cfg: &config.Config{ReportFormat: "json", MaxCntInBatch: 10, RateLimit: 3}, client: resty.New()}, args: args{ctx: context.Background(), metrics: metrics.GetMetricStruct()}, wantErr: false},
-		{name: "test text mode", fields: fields{cfg: &config.Config{ReportFormat: "text", MaxCntInBatch: 10, RateLimit: 3}, client: resty.New()}, args: args{ctx: context.Background(), metrics: metrics.GetMetricStruct()}, wantErr: false},
+		{name: "test batch mode", fields: fields{cfg: &config.Config{Mode: "http", ReportFormat: "batch", MaxCntInBatch: 10, RateLimit: 3}, clientGRPC: nil, client: resty.New()}, args: args{ctx: context.Background(), metrics: metrics.GetMetricStruct()}, wantErr: false},
+		{name: "test json mode", fields: fields{cfg: &config.Config{Mode: "http", ReportFormat: "json", MaxCntInBatch: 10, RateLimit: 3}, clientGRPC: nil, client: resty.New()}, args: args{ctx: context.Background(), metrics: metrics.GetMetricStruct()}, wantErr: false},
+		{name: "test text mode", fields: fields{cfg: &config.Config{Mode: "http", ReportFormat: "text", MaxCntInBatch: 10, RateLimit: 3}, clientGRPC: nil, client: resty.New()}, args: args{ctx: context.Background(), metrics: metrics.GetMetricStruct()}, wantErr: false},
 	}
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 	}))
