@@ -15,6 +15,7 @@ type configJSON struct {
 	StoreFile     string `json:"store_file,omitempty"`
 	DatabaseDsn   string `json:"database_dsn,omitempty"`
 	CryptoKey     string `json:"crypto_key,omitempty"`
+	TrustedSubnet string `json:"trusted_subnet,omitempty"`
 }
 
 func parseJSONConfig(config Config) (*Config, error) {
@@ -60,6 +61,10 @@ func parseJSONConfig(config Config) (*Config, error) {
 
 	if config.DSN == "" {
 		config.DSN = cfgJSON.DatabaseDsn
+	}
+
+	if config.TrustedSubnet == "" {
+		config.TrustedSubnet = cfgJSON.TrustedSubnet
 	}
 
 	return &config, nil

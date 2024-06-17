@@ -1,3 +1,4 @@
+// Package cryptorsa - included load keys, encrypt and decrypt data
 package cryptorsa
 
 import (
@@ -9,6 +10,7 @@ import (
 	"os"
 )
 
+// LoadPrivateKey loading private key from file
 func LoadPrivateKey(filepath string) (*rsa.PrivateKey, error) {
 	pemData, err := os.ReadFile(filepath)
 	if err != nil {
@@ -19,6 +21,7 @@ func LoadPrivateKey(filepath string) (*rsa.PrivateKey, error) {
 	return priv, err
 }
 
+// LoadPublicKey loading public key from file
 func LoadPublicKey(filepath string) (*rsa.PublicKey, error) {
 	pemData, err := os.ReadFile(filepath)
 	if err != nil {
@@ -29,6 +32,7 @@ func LoadPublicKey(filepath string) (*rsa.PublicKey, error) {
 	return pub, err
 }
 
+// EncryptOAEP encrypting data using public key
 func EncryptOAEP(public *rsa.PublicKey, msg []byte) ([]byte, error) {
 	msgLen := len(msg)
 	hash := sha512.New()
@@ -48,6 +52,7 @@ func EncryptOAEP(public *rsa.PublicKey, msg []byte) ([]byte, error) {
 	return encryptedBytes, nil
 }
 
+// DecryptOAEP decrypting data using private key
 func DecryptOAEP(private *rsa.PrivateKey, msg []byte) ([]byte, error) {
 	msgLen := len(msg)
 	hash := sha512.New()

@@ -14,6 +14,7 @@ func TestGetConfig(t *testing.T) {
 	}{
 		{name: "test get config", want: &Config{
 			Host:            "localhost:8080",
+			HostGRPC:        "localhost:3200",
 			LogLevel:        "info",
 			StoreInterval:   30,
 			FileStoragePath: "/tmp/metrics-db.json",

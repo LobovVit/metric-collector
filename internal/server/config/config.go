@@ -13,6 +13,7 @@ import (
 // Config determines the basic parameters of the agent's operation
 type Config struct {
 	Host            string `env:"ADDRESS"`
+	HostGRPC        string `env:"GRPC_ADDRESS"`
 	LogLevel        string `env:"LOG_LEVEL"`
 	StoreInterval   int    `env:"STORE_INTERVAL"`
 	FileStoragePath string `env:"FILE_STORAGE_PATH" `
@@ -21,6 +22,7 @@ type Config struct {
 	SigningKey      string `env:"KEY"`
 	CryptoKey       string `env:"CRYPTO_KEY"`
 	ConfigPath      string `env:"CONFIG"`
+	TrustedSubnet   string `env:"TRUSTED_SUBNET"`
 }
 
 // GetConfig - method creates a new configuration and sets values from environment variables and command line flags
@@ -32,6 +34,7 @@ func GetConfig() (*Config, error) {
 	}
 
 	host := flag.String("a", "localhost:8080", "адрес эндпоинта HTTP-сервера")
+	hostGRPC := flag.String("g", "localhost:3200", "адрес эндпоинта grpc-сервера")
 	logLevel := flag.String("l", "info", "log level")
 	storeInterval := flag.Int("i", 30, "интервал сохранения на диск")
 	fileStoragePath := flag.String("f", "/tmp/metrics-db.json", "файл для сохранения на диск")
@@ -41,6 +44,7 @@ func GetConfig() (*Config, error) {
 	cryptoKey := flag.String("crypto-key", "", "путь до файла с закрытым ключом") //private.pem
 	configPath1 := flag.String("config", "", "файл с JSON конфигом")
 	configPath2 := flag.String("c", "", "файл с JSON конфигом")
+	trustedSubnet := flag.String("t", "", "доверенная подсеть")
 	flag.Parse()
 
 	if config.ConfigPath == "" {
@@ -54,6 +58,9 @@ func GetConfig() (*Config, error) {
 
 	if config.Host == "" {
 		config.Host = *host
+	}
+	if config.HostGRPC == "" {
+		config.HostGRPC = *hostGRPC
 	}
 	if config.LogLevel == "" {
 		config.LogLevel = *logLevel
@@ -77,6 +84,9 @@ func GetConfig() (*Config, error) {
 	}
 	if config.CryptoKey == "" {
 		config.CryptoKey = *cryptoKey
+	}
+	if config.TrustedSubnet == "" {
+		config.TrustedSubnet = *trustedSubnet
 	}
 
 	config, err = parseJSONConfig(*config)

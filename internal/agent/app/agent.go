@@ -5,32 +5,49 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"net"
 	"strconv"
 	"sync"
 	"time"
 
+	"github.com/LobovVit/metric-collector/internal/agent/config"
+	"github.com/LobovVit/metric-collector/internal/agent/metrics"
 	"github.com/LobovVit/metric-collector/pkg/compress"
 	cryptorsa "github.com/LobovVit/metric-collector/pkg/crypto"
+	"github.com/LobovVit/metric-collector/pkg/logger"
+	"github.com/LobovVit/metric-collector/pkg/signature"
 	"github.com/go-resty/resty/v2"
 	"go.uber.org/zap"
 	"golang.org/x/sync/errgroup"
-
-	"github.com/LobovVit/metric-collector/internal/agent/config"
-	"github.com/LobovVit/metric-collector/internal/agent/metrics"
-	"github.com/LobovVit/metric-collector/pkg/logger"
-	"github.com/LobovVit/metric-collector/pkg/signature"
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials/insecure"
 )
 
 // Agent - struct is used to create Agent with settings.
 type Agent struct {
-	cfg    *config.Config
-	client *resty.Client
+	cfg        *config.Config
+	client     *resty.Client
+	clientGRPC *grpc.ClientConn
 }
 
 // New - method creates a new Agent.
-func New(config *config.Config) *Agent {
-	agent := Agent{cfg: config, client: resty.New()}
-	return &agent
+func New(config *config.Config) (*Agent, error) {
+	agent := Agent{cfg: config}
+	switch config.Mode {
+	case "grpc":
+		var err error
+		agent.clientGRPC, err = grpc.NewClient(config.HostGRPC, grpc.WithTransportCredentials(insecure.NewCredentials()))
+		if err != nil {
+			logger.Log.Error("Grpc new client", zap.Error(err))
+			return nil, fmt.Errorf("grpc new client: %w", err)
+		}
+	case "http":
+		agent.client = resty.New().SetHeader("X-Real-IP", GetLocalIP())
+	default:
+		logger.Log.Error("Incorrect mode")
+		return nil, fmt.Errorf("incorrect mode")
+	}
+	return &agent, nil
 }
 
 // Run - method starts an agent instance
@@ -65,14 +82,29 @@ func (a *Agent) Run(ctx context.Context) error {
 		for {
 			select {
 			case <-sendTicker.C:
-				tmp := m.CounterExecMemStats.Load()
-				err := a.sendRequestWithRetry(ctx, m)
-				m.CounterExecMemStats.Store(m.CounterExecMemStats.Load() - tmp)
-				if err != nil {
-					m.CounterExecMemStats.Store(tmp)
-					logger.Log.Error("Send request failed", zap.Error(err))
+				switch a.cfg.Mode {
+				case "grpc":
+					tmp := m.CounterExecMemStats.Load()
+					err := a.sendRequestGrpc(ctx, m)
+					m.CounterExecMemStats.Store(m.CounterExecMemStats.Load() - tmp)
+					if err != nil {
+						m.CounterExecMemStats.Store(tmp)
+						logger.Log.Error("Send request GRPC failed", zap.Error(err))
+					}
+					logger.Log.Info("Sent")
+				case "http":
+					tmp := m.CounterExecMemStats.Load()
+					err := a.sendRequestWithRetryHttp(ctx, m)
+					m.CounterExecMemStats.Store(m.CounterExecMemStats.Load() - tmp)
+					if err != nil {
+						m.CounterExecMemStats.Store(tmp)
+						logger.Log.Error("Send request HTTP failed", zap.Error(err))
+					}
+					logger.Log.Info("Sent")
+				default:
+					logger.Log.Info("Incorrect mode")
+					return
 				}
-				logger.Log.Info("Sent")
 			case <-ctx.Done():
 				logger.Log.Info("Shutdown")
 				return
@@ -83,7 +115,7 @@ func (a *Agent) Run(ctx context.Context) error {
 	return nil
 }
 
-func (a *Agent) sendRequestWithRetry(ctx context.Context, metrics *metrics.Metrics) error {
+func (a *Agent) sendRequestWithRetryHttp(ctx context.Context, metrics *metrics.Metrics) error {
 	a.client.SetRetryCount(3).SetRetryWaitTime(3 * time.Second)
 	return a.sendRequest(ctx, metrics)
 }
@@ -256,4 +288,20 @@ func (a *Agent) sendSingleRequestBatchJSON(ctx context.Context, singlePartMetric
 		return fmt.Errorf("send request json: %w", err)
 	}
 	return nil
+}
+
+// GetLocalIP returns the non loopback local IP of the host
+func GetLocalIP() string {
+	addrs, err := net.InterfaceAddrs()
+	if err != nil {
+		return ""
+	}
+	for _, address := range addrs {
+		if ipnet, ok := address.(*net.IPNet); ok && !ipnet.IP.IsLoopback() {
+			if ipnet.IP.To4() != nil {
+				return ipnet.IP.String()
+			}
+		}
+	}
+	return ""
 }

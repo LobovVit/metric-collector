@@ -15,6 +15,8 @@ func TestGetConfig(t *testing.T) {
 	}{
 		{name: "test get config", cfg: &Config{
 			Host:           "localhost:8080",
+			HostGRPC:       "localhost:3200",
+			Mode:           "http",
 			LogLevel:       "info",
 			ReportInterval: 1,
 			PollInterval:   1,
@@ -24,6 +26,8 @@ func TestGetConfig(t *testing.T) {
 			MaxCntInBatch:  5,
 		}, want: &Config{
 			Host:           "http://localhost:8080/updates/",
+			HostGRPC:       "localhost:3200",
+			Mode:           "http",
 			LogLevel:       "info",
 			ReportInterval: 1,
 			PollInterval:   1,

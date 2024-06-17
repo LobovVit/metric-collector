@@ -4,13 +4,19 @@ package server
 import (
 	"context"
 	"errors"
+	"fmt"
+	"net"
 	"net/http"
+	"sync"
 	"time"
 
+	"github.com/LobovVit/metric-collector/internal/proto"
+	"github.com/LobovVit/metric-collector/internal/server/domain/metrics"
 	cryptorsa "github.com/LobovVit/metric-collector/pkg/crypto"
 	"github.com/go-chi/chi/v5"
 	"go.uber.org/zap"
 	"golang.org/x/sync/errgroup"
+	"google.golang.org/grpc"
 
 	"github.com/LobovVit/metric-collector/internal/server/config"
 	"github.com/LobovVit/metric-collector/internal/server/domain/actions"
@@ -22,7 +28,8 @@ import (
 type Server struct {
 	config  *config.Config
 	storage actions.Repo
-	//wg      sync.WaitGroup
+	wg      sync.WaitGroup
+	proto.UnimplementedUpdateServicesServer
 }
 
 // New - method to create server instance
@@ -50,6 +57,16 @@ func (a *Server) Run(ctx context.Context) error {
 		mux.Use(middleware.Rsa(priv))
 	}
 
+	if a.config.TrustedSubnet != "" {
+		_, inet, err := net.ParseCIDR(a.config.TrustedSubnet)
+		if err != nil {
+			logger.Log.Error("cidr parse:", zap.Error(err))
+		}
+		if err == nil {
+			mux.Use(middleware.WithCheckSubnet(inet))
+		}
+	}
+
 	mux.Get("/", a.allMetricsHandler)
 	mux.Get("/ping", a.dbPingHandler)
 	mux.Post("/value/", a.singleMetricJSONHandler)
@@ -58,40 +75,57 @@ func (a *Server) Run(ctx context.Context) error {
 	mux.Post("/updates/", a.updateBatchJSONHandler)
 	mux.Post("/update/{type}/{name}/{value}", a.updateHandler)
 
-	logger.Log.Info("Starting server", zap.String("address", a.config.Host))
-
 	httpServer := &http.Server{
 		Addr:    a.config.Host,
 		Handler: mux,
 	}
 
+	grpcListener, err := net.Listen("tcp", a.config.HostGRPC)
+	if err != nil {
+		return fmt.Errorf("grpc listen: %w", err)
+	}
+	grpcServer := grpc.NewServer()
+	proto.RegisterUpdateServicesServer(grpcServer, a)
+
 	g, gCtx := errgroup.WithContext(ctx)
 	g.Go(func() error {
+		logger.Log.Info("Starting http server", zap.String("address", a.config.Host))
 		return httpServer.ListenAndServe()
 	})
 	g.Go(func() error {
-		<-gCtx.Done()
-		a.Shutdown(httpServer)
-		return nil
+		logger.Log.Info("Starting grpc server", zap.String("address", a.config.HostGRPC))
+		return grpcServer.Serve(grpcListener)
 	})
+
+	a.wg.Add(1)
+	go (func() {
+		<-gCtx.Done()
+		a.Shutdown(httpServer, grpcServer)
+	})()
 
 	if err := g.Wait(); err != nil && !errors.Is(err, http.ErrServerClosed) { //
 		logger.Log.Error("http server:", zap.Error(err))
 	}
+	a.wg.Wait()
 	return nil
 }
 
 // Shutdown - method that implements saving the server state when shutting down
-func (a *Server) Shutdown(srv *http.Server) {
+func (a *Server) Shutdown(srvHTTP *http.Server, srvGRPC *grpc.Server) {
+	defer a.wg.Done()
 	shutdownCtx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
 	defer cancel()
-	err := srv.Shutdown(shutdownCtx)
+	err := srvHTTP.Shutdown(shutdownCtx)
 	if err != nil {
 		logger.Log.Error("http server shutdown:", zap.Error(err))
 	}
 	if err == nil {
 		logger.Log.Info("http server shutdown ok")
 	}
+
+	srvGRPC.GracefulStop()
+	logger.Log.Info("grpc server shutdown ok")
+
 	err = a.storage.SaveToFile(shutdownCtx)
 	if err != nil {
 		logger.Log.Error("Save to file:", zap.Error(err))
@@ -99,4 +133,27 @@ func (a *Server) Shutdown(srv *http.Server) {
 	if err == nil {
 		logger.Log.Info("Save to file ok")
 	}
+}
+
+func (a *Server) SingleMetric(ctx context.Context, in *proto.Metric) (*proto.Response, error) {
+	var response proto.Response
+	metric := metrics.Metrics{ID: in.Id, MType: in.Type.String(), Delta: &in.Delta, Value: &in.Value}
+	_, err := a.storage.CheckAndSaveStruct(ctx, metric)
+	if err != nil {
+		response.Error = fmt.Sprintf("single metric check and save: %v", err)
+	}
+	return &response, nil
+}
+
+func (a *Server) ButchMetrics(ctx context.Context, in *proto.Metrics) (*proto.Response, error) {
+	var response proto.Response
+	var sliceMetric []metrics.Metrics
+	for _, metric := range in.Metrics {
+		sliceMetric = append(sliceMetric, metrics.Metrics{ID: metric.Id, MType: metric.Type.String(), Delta: &metric.Delta, Value: &metric.Value})
+	}
+	_, err := a.storage.CheckAndSaveBatch(ctx, sliceMetric)
+	if err != nil {
+		response.Error = fmt.Sprintf("batch metrics check and save: %v", err)
+	}
+	return &response, nil
 }
